@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Run lint-staged on staged files, then a secret scan over the staged diff.
+# A failure aborts the commit. Do NOT bypass with --no-verify.
+
+set -e
+
+npx lint-staged
+
+# gitleaks scan on the staged content. Requires gitleaks installed (devDependency
+# on Linux/macOS; Windows users: `winget install gitleaks` or `scoop install gitleaks`).
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --no-banner
+else
+  echo "warning: gitleaks not installed; secret scan skipped." >&2
+  echo "  Install: https://github.com/gitleaks/gitleaks#installing" >&2
+fi

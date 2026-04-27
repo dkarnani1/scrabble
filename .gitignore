@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Next.js build artifacts
+.next/
+out/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# Vercel local
+.vercel/
+
+# Env files (everything except the example)
+.env
+.env.local
+.env.*.local
+.env.development*
+.env.production*
+.env.test*
+!.env.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

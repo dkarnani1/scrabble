@@ -1,0 +1,32 @@
+title = "scrabble repo gitleaks config"
+
+# Use the default ruleset shipped with gitleaks as the baseline.
+[extend]
+useDefault = true
+
+# Custom narrow rules for this project's expected secret shapes.
+[[rules]]
+id = "supabase-service-role-key"
+description = "Supabase service role / secret key (JWT-shaped, prod-grade)"
+regex = '''eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}'''
+tags = ["key", "supabase"]
+
+[[rules]]
+id = "supabase-secret-key-prefixed"
+description = "Supabase secret key (sb_secret_ prefix)"
+regex = '''sb_secret_[A-Za-z0-9]{20,}'''
+tags = ["key", "supabase"]
+
+# Allowlist: example file + fixtures may contain placeholder strings that
+# pattern-match against rules. They MUST contain the literal token "replace_me"
+# (or be inside .env.example) so a leaked real secret cannot hide here.
+[allowlist]
+description = "Documented placeholder values"
+paths = [
+  '''\.env\.example$''',
+  '''tests/fixtures/.*''',
+]
+regexes = [
+  '''replace_me''',
+  '''sb_publishable_replace_me''',
+]
