@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { BoardCanvas } from '@ui/components/board/BoardCanvas';
 import { Rack } from '@ui/components/rack/Rack';
 import { RackControls } from '@ui/components/rack/RackControls';
@@ -24,6 +25,7 @@ export type PlayClientProps = {
 };
 
 export function PlayClient({ initialView, myUserId }: PlayClientProps) {
+  const router = useRouter();
   const [view, setView] = React.useState<GameView>(initialView);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
@@ -32,6 +34,13 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   const [selectedRackIndex, setSelectedRackIndex] = React.useState<number | null>(null);
 
   const tentative = useTentativeBoard({ rack: view.myRack ?? [] });
+
+  // Navigate to the result screen as soon as the live view flips to a terminal phase.
+  React.useEffect(() => {
+    if (view.phase === 'completed' || view.phase === 'abandoned') {
+      router.replace(`/games/${view.id}/result`);
+    }
+  }, [view.phase, view.id, router]);
 
   const refetch = React.useCallback(() => {
     void (async () => {

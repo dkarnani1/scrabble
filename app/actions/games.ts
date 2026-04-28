@@ -276,6 +276,35 @@ function zodToError(error: z.ZodError): {
 // Re-export the profile lookup used by the home page so the import surface stays small.
 export { getProfilesByIds };
 
+// ---- rematch ---------------------------------------------------------------------
+
+const rematchSchema = z.object({ priorGameId: z.string().uuid() });
+
+export async function rematch(
+  input: z.input<typeof rematchSchema>,
+): Promise<ActionResult<{ gameId: string; inviteCode: string }>> {
+  const parsed = rematchSchema.safeParse(input);
+  if (!parsed.success) return err(zodToError(parsed.error));
+
+  const user = await getCurrentUser();
+  if (!user) return err({ code: 'unauthenticated' });
+
+  const prior = await getGameById(parsed.data.priorGameId);
+  if (!prior) return err({ code: 'not-found', entity: 'game' });
+  if (prior.phase !== 'completed') {
+    return err({ code: 'state-conflict', reason: 'wrong-game-phase' });
+  }
+  if (prior.host_user_id !== user.id) {
+    return err({ code: 'forbidden', reason: 'not-host' });
+  }
+
+  // Same settings, fresh seed + bag + invite code.
+  return createGame({
+    timerSetting: prior.timer_setting,
+    dictionaryId: prior.dictionary_id,
+  });
+}
+
 // ---- getGameView -----------------------------------------------------------------
 
 const getGameViewSchema = z.object({ gameId: z.string().uuid() });

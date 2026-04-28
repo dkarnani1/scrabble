@@ -173,30 +173,45 @@ export async function commitAction(args: {
     [rackKey]: newRack,
   } as Parameters<typeof updateGameSecrets>[1]);
 
-  // Update the active player's score + rack_count.
-  const me = result.state.players.find((p) => p.slot === args.action.playerSlot)!;
-  await updatePlayer(args.gameId, args.action.playerSlot, {
-    score: me.score,
-    rack_count: me.rackSize,
-  });
+  // Update every player row to mirror the post-move state. For non-terminal moves only
+  // the active player's score/rack_count change, but on a terminal move the rules
+  // engine has already adjusted every other player's score for the unplayed-tile
+  // penalty (and going-out bonus), so we have to write all of them.
+  for (const player of result.state.players) {
+    await updatePlayer(args.gameId, player.slot, {
+      score: player.score,
+      rack_count: player.rackSize,
+    });
+  }
 
   // Compute the next deadline based on the (already advanced) active slot.
   const now = new Date();
-  const newDeadline = nextDeadline(now, state.timerSetting);
-  const newPhase: GamePhase =
-    args.action.kind === 'place' ? 'challenge-window' : result.state.phase;
+  const isTerminal = result.state.phase === 'completed';
+  const newDeadline = isTerminal ? null : nextDeadline(now, state.timerSetting);
+  const newPhase: GamePhase = isTerminal
+    ? 'completed'
+    : args.action.kind === 'place'
+      ? 'challenge-window'
+      : result.state.phase;
 
   // Update games row with the new board, phase, active_slot, etc.
   const sb = getSupabaseAdminClient();
   const patch: Record<string, unknown> = {
     phase: newPhase,
-    active_slot: result.state.activeSlot,
+    active_slot: isTerminal ? null : result.state.activeSlot,
     bag_count: bagToPersist.length,
     consecutive_scoreless: result.state.consecutiveScorelessTurns,
-    turn_started_at: now.toISOString(),
-    turn_deadline_at:
-      newPhase === 'challenge-window' ? null : newDeadline ? newDeadline.toISOString() : null,
+    turn_started_at: isTerminal ? null : now.toISOString(),
+    turn_deadline_at: isTerminal
+      ? null
+      : newPhase === 'challenge-window'
+        ? null
+        : newDeadline
+          ? newDeadline.toISOString()
+          : null,
     board_state: result.state.board.cells,
+    ended_at: isTerminal ? new Date().toISOString() : null,
+    result: isTerminal ? result.state.result : null,
   };
   const { error: gameUpdateError } = await sb.from('games').update(patch).eq('id', args.gameId);
   if (gameUpdateError) throw gameUpdateError;

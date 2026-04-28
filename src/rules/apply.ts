@@ -7,11 +7,12 @@
 // driven by the bag passed in. Callers (orchestration) seed and shuffle the bag using
 // the game's `rng_seed` so the same inputs always produce the same outputs.
 
-import { drawTiles, returnTiles } from './bag';
+import { drawTiles } from './bag';
 import { validateExchange } from './exchange';
 import { validatePlacement, type PlacementError } from './placement';
 import { rebuildBoardCells } from './words';
 import { scoreMove } from './scoring';
+import { evaluateEndgame } from './endgame';
 import type { DictionarySet } from '@dictionary/load';
 import type {
   Board,
@@ -136,20 +137,21 @@ export function applyMove(args: {
       challenge: { kind: 'unchallenged' },
     };
 
+    const intermediateState: GameState = {
+      ...state,
+      board: newBoard,
+      players: newPlayers,
+      history: [...state.history, newCommittedMove],
+      activeSlot: otherSlot,
+      bagRemaining: bagAfter.length,
+      consecutiveScorelessTurns: 0,
+      turnStartedAt: nowIso,
+      turnDeadlineAt: state.turnDeadlineAt,
+    };
+    const finalized = finalizeIfTerminal(intermediateState, 'place');
     return {
       ok: true,
-      state: {
-        ...state,
-        board: newBoard,
-        players: newPlayers,
-        history: [...state.history, newCommittedMove],
-        activeSlot: otherSlot,
-        bagRemaining: bagAfter.length,
-        consecutiveScorelessTurns: 0,
-        turnStartedAt: nowIso,
-        // Deadline is rebuilt in orchestration.timers; rules engine doesn't know about TimerSetting.
-        turnDeadlineAt: state.turnDeadlineAt,
-      },
+      state: finalized,
       bagAfter,
       refillDraws: draw.drawn,
       placedTiles: action.tiles,
@@ -168,16 +170,18 @@ export function applyMove(args: {
       },
       challenge: { kind: 'unchallenged' },
     };
+    const intermediateState: GameState = {
+      ...state,
+      players: newPlayers,
+      history: [...state.history, newCommittedMove],
+      activeSlot: otherSlot,
+      consecutiveScorelessTurns: state.consecutiveScorelessTurns + 1,
+      turnStartedAt: nowIso,
+    };
+    const finalized = finalizeIfTerminal(intermediateState, 'pass');
     return {
       ok: true,
-      state: {
-        ...state,
-        players: newPlayers,
-        history: [...state.history, newCommittedMove],
-        activeSlot: otherSlot,
-        consecutiveScorelessTurns: state.consecutiveScorelessTurns + 1,
-        turnStartedAt: nowIso,
-      },
+      state: finalized,
       bagAfter: bag,
       refillDraws: [],
       placedTiles: [],
@@ -223,17 +227,19 @@ export function applyMove(args: {
     challenge: { kind: 'unchallenged' },
   };
 
+  const intermediateState: GameState = {
+    ...state,
+    players: newPlayers,
+    history: [...state.history, newCommittedMove],
+    activeSlot: otherSlot,
+    consecutiveScorelessTurns: state.consecutiveScorelessTurns + 1,
+    bagRemaining: bagAfter.length,
+    turnStartedAt: nowIso,
+  };
+  const finalized = finalizeIfTerminal(intermediateState, 'exchange');
   return {
     ok: true,
-    state: {
-      ...state,
-      players: newPlayers,
-      history: [...state.history, newCommittedMove],
-      activeSlot: otherSlot,
-      consecutiveScorelessTurns: state.consecutiveScorelessTurns + 1,
-      bagRemaining: bagAfter.length,
-      turnStartedAt: nowIso,
-    },
+    state: finalized,
     bagAfter,
     refillDraws: draw.drawn,
     placedTiles: [],
@@ -241,6 +247,27 @@ export function applyMove(args: {
 }
 
 // --- helpers -----------------------------------------------------------------
+
+function finalizeIfTerminal(state: GameState, lastEvent: 'place' | 'pass' | 'exchange'): GameState {
+  const verdict = evaluateEndgame(state, { lastEvent });
+  if (!verdict.ok) return state;
+
+  // Apply final-score adjustments to each player.
+  const finalized: GameState = {
+    ...state,
+    phase: 'completed',
+    activeSlot: null,
+    turnStartedAt: null,
+    turnDeadlineAt: null,
+    endedAt: new Date().toISOString(),
+    result: verdict.result,
+    players: state.players.map((p) => ({
+      ...p,
+      score: verdict.finalScores[p.slot] ?? p.score,
+    })),
+  };
+  return finalized;
+}
 
 function consumeTilesFromRack(rack: Rack, placed: ReadonlyArray<Tile>): Rack {
   const out = rack.slice();

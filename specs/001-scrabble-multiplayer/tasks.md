@@ -234,21 +234,21 @@ fidelity, robustness, and polish.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T300 [P] [US3] Unit test endgame in `tests/unit/rules/endgame.test.ts` (out-of-tiles bonus transfer, six-pass no-transfer, tie, single-pass-not-terminal)
-- [ ] T301 [P] [US3] Integration test endgame triggered by `placeMove` emptying rack in `tests/integration/actions/endgame-out-of-tiles.test.ts`
-- [ ] T302 [P] [US3] Integration test endgame triggered by 6 consecutive scoreless turns in `tests/integration/actions/endgame-six-pass.test.ts`
-- [ ] T303 [P] [US3] Playwright spec: game-to-end with endgame-screen screenshot in `tests/e2e/endgame.spec.ts`
+- [x] T300 [P] [US3] Unit test endgame in `tests/unit/rules/endgame.test.ts` (out-of-tiles bonus transfer, six-pass no-transfer, tie, single-pass-not-terminal)
+- [x] T301 [P] [US3] Integration test endgame triggered by `placeMove` emptying rack in `tests/integration/actions/endgame-out-of-tiles.test.ts`
+- [x] T302 [P] [US3] Integration test endgame triggered by 6 consecutive scoreless turns in `tests/integration/actions/endgame-six-pass.test.ts`
+- [x] T303 [P] [US3] Playwright spec: game-to-end with endgame-screen screenshot in `tests/e2e/endgame.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T310 [US3] Implement endgame detector + final scorer in `src/rules/endgame.ts`
-- [ ] T311 [US3] Wire endgame check into `src/rules/apply.ts` (return `phase: 'completed'` + `result` when triggered)
-- [ ] T312 [US3] Update `src/orchestration/game-engine.ts` to set `games.ended_at`, `result`, clear `active_slot` and timers on completion
-- [ ] T313 [P] [US3] Implement endgame screen at `app/(app)/games/[gameId]/result/page.tsx`
-- [ ] T314 [P] [US3] Implement endgame banner in `src/ui/components/feedback/EndgameBanner.tsx`
-- [ ] T315 [US3] Implement `rematch` Server Action (creates new game with same settings, fresh single-use invite) in `app/actions/games.ts`
-- [ ] T316 [P] [US3] Implement Rematch button on result page (host-only) in `src/ui/components/result/RematchButton.tsx`
-- [ ] T317 [P] [US3] Disable in-game actions when phase is `completed` (assert in board/rack/controls components)
+- [x] T310 [US3] Implement endgame detector + final scorer in `src/rules/endgame.ts`
+- [x] T311 [US3] Wire endgame check into `src/rules/apply.ts` (return `phase: 'completed'` + `result` when triggered)
+- [x] T312 [US3] Update `src/orchestration/game-engine.ts` to set `games.ended_at`, `result`, clear `active_slot` and timers on completion
+- [x] T313 [P] [US3] Implement endgame screen at `app/(app)/games/[gameId]/result/page.tsx`
+- [x] T314 [P] [US3] Implement endgame banner in `src/ui/components/feedback/EndgameBanner.tsx`
+- [x] T315 [US3] Implement `rematch` Server Action (creates new game with same settings, fresh single-use invite) in `app/actions/games.ts`
+- [x] T316 [P] [US3] Implement Rematch button on result page (host-only) in `src/ui/components/result/RematchButton.tsx`
+- [x] T317 [P] [US3] Disable in-game actions when phase is `completed` (PlayClient redirects to /result on completion; the play page also redirects on initial load when phase is completed/abandoned, so the in-game controls are unreachable.)
 
 **Checkpoint**: US3 — full match completable end-to-end (US1 + US2 + US3 = playable MVP).
 
