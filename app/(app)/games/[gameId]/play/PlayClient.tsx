@@ -13,6 +13,7 @@ import { MoveHistoryList } from '@ui/components/moves/MoveHistoryList';
 import { RejectionInline, reasonToMessage } from '@ui/components/feedback/RejectionInline';
 import { useTentativeBoard } from '@ui/hooks/use-tentative-board';
 import { useGameChannel } from '@ui/hooks/use-game-channel';
+import { TimerDisplay } from '@ui/components/timer/TimerDisplay';
 import { placeMove, passTurn, exchangeTiles } from '@/app/actions/moves';
 import { getGameView } from '@/app/actions/games';
 import type { GameView } from '@/app/actions/types';
@@ -155,6 +156,10 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
             </p>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <TimerDisplay
+              deadlineAt={view.phase === 'playing' ? view.turnDeadlineAt : null}
+              serverNow={view.serverNow}
+            />
             <span className="font-mono">
               {me?.score ?? 0} – {opponent?.score ?? 0}
             </span>

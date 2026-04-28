@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import { getCurrentUser } from '@auth/server';
 import { commitAction, loadGameStateForCaller } from '@orchestration/game-engine';
+import { resolveIfExpired } from '@orchestration/timers';
 import { err, ok, type ActionError, type ActionResult, type GameView } from './types';
 import { loadGameView } from './_helpers';
 import type { PlacementError } from '@rules/placement';
@@ -64,6 +65,9 @@ export async function placeMove(
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
 
+  // Preflight: resolve any expired turn deadline before doing per-action work.
+  await resolveIfExpired(parsed.data.gameId, new Date());
+
   // Load to confirm the caller is the active player; the orchestrator re-checks too.
   const loaded = await loadGameStateForCaller(parsed.data.gameId, user.id);
   if (!loaded) return err({ code: 'not-found', entity: 'game' });
@@ -104,6 +108,8 @@ export async function passTurn(
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
 
+  await resolveIfExpired(parsed.data.gameId, new Date());
+
   const loaded = await loadGameStateForCaller(parsed.data.gameId, user.id);
   if (!loaded) return err({ code: 'not-found', entity: 'game' });
   if (loaded.callerSlot === null) return err({ code: 'forbidden', reason: 'not-a-participant' });
@@ -138,6 +144,8 @@ export async function exchangeTiles(
 
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
+
+  await resolveIfExpired(parsed.data.gameId, new Date());
 
   const loaded = await loadGameStateForCaller(parsed.data.gameId, user.id);
   if (!loaded) return err({ code: 'not-found', entity: 'game' });

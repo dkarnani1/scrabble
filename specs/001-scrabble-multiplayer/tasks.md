@@ -262,21 +262,21 @@ fidelity, robustness, and polish.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T400 [P] [US4] Unit test timer math in `tests/unit/orchestration/timers.test.ts` (`remainingMs`, `resolveIfExpired`, fake-clock)
-- [ ] T401 [P] [US4] Integration test forced-pass on expiry in `tests/integration/actions/timer-expiry.test.ts`
-- [ ] T402 [P] [US4] Integration test cron-driven sweep with no client active in `tests/integration/actions/cron-timer-tick.test.ts`
-- [ ] T403 [P] [US4] Playwright spec: 30s timer expires → forced pass with urgent + expired screenshots in `tests/e2e/timer-expiry.spec.ts`
+- [x] T400 [P] [US4] Unit test timer math in `tests/unit/orchestration/timers.test.ts` (`remainingMs`, `resolveIfExpired`, fake-clock)
+- [x] T401 [P] [US4] Integration test forced-pass on expiry in `tests/integration/actions/timer-expiry.test.ts`
+- [x] T402 [P] [US4] Integration test cron-driven sweep with no client active in `tests/integration/actions/cron-timer-tick.test.ts`
+- [x] T403 [P] [US4] Playwright spec: 30s timer expires → forced pass with urgent + expired screenshots in `tests/e2e/timer-expiry.spec.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T410 [US4] Implement deadline math in `src/orchestration/timers.ts` (`remainingMs(state, now)`, `resolveIfExpired(gameId, now)`)
-- [ ] T411 [US4] Wire `resolveDueDeadlines` preflight into every Server Action in `app/actions/*.ts` (idempotent, runs before per-action work)
-- [ ] T412 [US4] Implement Vercel Cron route at `app/api/cron/timer-tick/route.ts` (CRON_SECRET-protected; sweeps `games` with `turn_deadline_at < now()`)
-- [ ] T413 [P] [US4] Implement `src/ui/hooks/use-server-timer.ts` (clock-skew correction on each push)
-- [ ] T414 [P] [US4] Implement `src/ui/components/timer/TimerDisplay.tsx`
-- [ ] T415 [P] [US4] Implement `src/ui/components/timer/UrgencyBadge.tsx` (visual <5s treatment)
-- [ ] T416 [US4] Wire timer-setting selector (30s/1m/2m/none) into `app/(app)/games/new/page.tsx`
-- [ ] T417 [P] [US4] Add server-time freshness route at `app/api/server-time/route.ts` (returns `{ now: ISO }`)
+- [x] T410 [US4] Implement deadline math in `src/orchestration/timers.ts` (`remainingMs(state, now)`, `resolveIfExpired(gameId, now)`)
+- [x] T411 [US4] Wire `resolveDueDeadlines` preflight into every Server Action in `app/actions/*.ts` (idempotent, runs before per-action work)
+- [x] T412 [US4] Implement Vercel Cron route at `app/api/cron/timer-tick/route.ts` (CRON_SECRET-protected; sweeps `games` with `turn_deadline_at < now()`)
+- [x] T413 [P] [US4] Implement `src/ui/hooks/use-server-timer.ts` (clock-skew correction on each push)
+- [x] T414 [P] [US4] Implement `src/ui/components/timer/TimerDisplay.tsx`
+- [x] T415 [P] [US4] Implement `src/ui/components/timer/UrgencyBadge.tsx` (visual <5s treatment)
+- [x] T416 [US4] Wire timer-setting selector (30s/1m/2m/none) into `app/(app)/games/new/page.tsx` (already shipped in Phase 3 NewGameForm)
+- [x] T417 [P] [US4] Add server-time freshness route at `app/api/server-time/route.ts` (returns `{ now: ISO }`)
 
 **Checkpoint**: US4 — timed games work; cron sweep guarantees forward progress.
 

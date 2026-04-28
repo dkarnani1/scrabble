@@ -318,6 +318,12 @@ export async function getGameView(
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
 
+  // Preflight: resolve any expired turn deadline so reads reflect the corrected state.
+  // This is where the lazy timer enforcement runs for the play page's initial render
+  // and for every refetch the realtime channel triggers.
+  const { resolveIfExpired } = await import('@orchestration/timers');
+  await resolveIfExpired(parsed.data.gameId, new Date());
+
   const view = await loadGameView({ gameId: parsed.data.gameId, callerUserId: user.id });
   if (!view) return err({ code: 'not-found', entity: 'game' });
   return ok(view);
