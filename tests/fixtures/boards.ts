@@ -2,6 +2,7 @@
 // instead of re-deriving the same setup every time.
 
 import { createEmptyBoard, BOARD_SIZE } from '@rules/board';
+import { LETTER_VALUES } from '@rules/distribution';
 import type { Board, Letter, PlacedTile } from '@rules/types';
 
 export function emptyBoard(): Board {
@@ -9,7 +10,8 @@ export function emptyBoard(): Board {
 }
 
 /** Build a board where a single horizontal word has already been placed centered on
- * the star. Useful for testing connection-to-existing-tile rules.
+ * the star. Tiles get the standard English letter values (C=3, A=1, etc.) so scoring
+ * tests reflect real arithmetic.
  *   word: e.g. 'HELLO' (uppercase letters only)
  *   moveSeq: which committed-move seq to attribute the placed tiles to
  */
@@ -24,12 +26,14 @@ export function boardWithCenterWord(word: string, moveSeq: number = 1): Board {
   }
 
   const base = createEmptyBoard();
-  const cells: (PlacedTile | null)[][] = base.cells.map((row) => row.slice() as (PlacedTile | null)[]);
+  const cells: (PlacedTile | null)[][] = base.cells.map(
+    (row) => row.slice() as (PlacedTile | null)[],
+  );
 
   for (let i = 0; i < upper.length; i++) {
     const letter = upper[i] as Letter;
     cells[center]![start + i] = {
-      tile: { kind: 'letter', letter, value: 1 },
+      tile: { kind: 'letter', letter, value: LETTER_VALUES[letter] },
       placedInMoveSeq: moveSeq,
     };
   }

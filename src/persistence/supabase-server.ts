@@ -14,13 +14,13 @@ export async function createSupabaseServerClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         // In Server Actions and route handlers, set the response cookies. In RSC reads
         // the cookie store is read-only and setAll is a no-op — the framework will
         // refresh the session on the next mutation.
         try {
           for (const { name, value, options } of cookiesToSet) {
-            cookieStore.set(name, value, options as CookieOptions);
+            cookieStore.set(name, value, options);
           }
         } catch {
           // RSC read-only context; safe to ignore.

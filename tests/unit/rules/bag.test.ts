@@ -91,7 +91,7 @@ describe('returnTiles', () => {
 
 function stamp(t: { kind: string }): string {
   if (t.kind === 'letter') {
-    return `L:${(t as { letter: string }).letter}`;
+    return `L:${(t as unknown as { letter: string }).letter}`;
   }
   return 'B';
 }

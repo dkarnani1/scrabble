@@ -1,5 +1,5 @@
 ---
-description: "Task list for online multiplayer Scrabble-style web game"
+description: 'Task list for online multiplayer Scrabble-style web game'
 ---
 
 # Tasks: Online Multiplayer Scrabble-Style Web Game
@@ -35,23 +35,23 @@ fidelity, robustness, and polish.
 
 **Purpose**: Project initialization, tooling, and repo hygiene baseline.
 
-- [X] T001 Initialize Next.js 15 + TypeScript project at repo root (`package.json`, `tsconfig.json`, `next.config.ts`)
-- [X] T002 [P] Configure Tailwind CSS 4 in `app/globals.css` and `tailwind.config.ts`
-- [X] T003 [P] Install runtime deps (`@supabase/supabase-js`, `@supabase/ssr`, `zod`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`) and dev deps (`vitest`, `@vitest/ui`, `playwright`, `@playwright/test`, `@axe-core/playwright`, `eslint-plugin-import`, `prettier`, `husky`, `lint-staged`) in `package.json`
-- [X] T004 [P] Configure ESLint with layer-boundary rules in `eslint.config.mjs` (forbid `react`, `next/*`, `@supabase/*` imports inside `src/rules/**`)
-- [X] T005 [P] Configure Prettier in `.prettierrc` and `.prettierignore`
-- [X] T006 [P] Configure Vitest projects (unit + integration) in `vitest.config.ts`
-- [X] T007 [P] Configure Playwright (two browser contexts, screenshot on every step, base URL via env) in `playwright.config.ts`
-- [X] T008 Create `.env.example` at repo root listing every documented env var with safe placeholder values (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`)
-- [X] T009 [P] Update `.gitignore` to exclude `.env*.local`, `.env.production*`, `playwright-report/`, `test-results/`, `.vercel/`, `node_modules/`, `.next/`
-- [X] T010 [P] Add Husky pre-commit hook in `.husky/pre-commit` running `lint-staged` + `gitleaks`
-- [X] T011 [P] Configure secret scanning in `.gitleaks.toml`
-- [X] T012 [P] Add npm scripts (`dev`, `build`, `lint`, `typecheck`, `test:unit`, `test:integration`, `test:e2e`, `test:e2e:update-snapshots`, `dictionary:prepare`, `dictionary:verify`) in `package.json`
-- [X] T013 [P] Create base `app/layout.tsx` with font setup and global providers
-- [X] T014 [P] Create `app/globals.css` with Tailwind directives and base tokens
-- [X] T015 [P] Create `app/(marketing)/page.tsx` skeleton landing page
-- [X] T016 [P] Add `vercel.json` with cron schedule for `/api/cron/timer-tick` (`*/1 * * * *`) and function timeouts
-- [X] T017 [P] Create public-safe `README.md` at repo root pointing to `specs/001-scrabble-multiplayer/quickstart.md`
+- [x] T001 Initialize Next.js 15 + TypeScript project at repo root (`package.json`, `tsconfig.json`, `next.config.ts`)
+- [x] T002 [P] Configure Tailwind CSS 4 in `app/globals.css` and `tailwind.config.ts`
+- [x] T003 [P] Install runtime deps (`@supabase/supabase-js`, `@supabase/ssr`, `zod`, `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`) and dev deps (`vitest`, `@vitest/ui`, `playwright`, `@playwright/test`, `@axe-core/playwright`, `eslint-plugin-import`, `prettier`, `husky`, `lint-staged`) in `package.json`
+- [x] T004 [P] Configure ESLint with layer-boundary rules in `eslint.config.mjs` (forbid `react`, `next/*`, `@supabase/*` imports inside `src/rules/**`)
+- [x] T005 [P] Configure Prettier in `.prettierrc` and `.prettierignore`
+- [x] T006 [P] Configure Vitest projects (unit + integration) in `vitest.config.ts`
+- [x] T007 [P] Configure Playwright (two browser contexts, screenshot on every step, base URL via env) in `playwright.config.ts`
+- [x] T008 Create `.env.example` at repo root listing every documented env var with safe placeholder values (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`)
+- [x] T009 [P] Update `.gitignore` to exclude `.env*.local`, `.env.production*`, `playwright-report/`, `test-results/`, `.vercel/`, `node_modules/`, `.next/`
+- [x] T010 [P] Add Husky pre-commit hook in `.husky/pre-commit` running `lint-staged` + `gitleaks`
+- [x] T011 [P] Configure secret scanning in `.gitleaks.toml`
+- [x] T012 [P] Add npm scripts (`dev`, `build`, `lint`, `typecheck`, `test:unit`, `test:integration`, `test:e2e`, `test:e2e:update-snapshots`, `dictionary:prepare`, `dictionary:verify`) in `package.json`
+- [x] T013 [P] Create base `app/layout.tsx` with font setup and global providers
+- [x] T014 [P] Create `app/globals.css` with Tailwind directives and base tokens
+- [x] T015 [P] Create `app/(marketing)/page.tsx` skeleton landing page
+- [x] T016 [P] Add `vercel.json` with cron schedule for `/api/cron/timer-tick` (`*/1 * * * *`) and function timeouts
+- [x] T017 [P] Create public-safe `README.md` at repo root pointing to `specs/001-scrabble-multiplayer/quickstart.md`
 
 ---
 
@@ -63,60 +63,60 @@ fidelity, robustness, and polish.
 
 ### Database schema and migrations
 
-- [X] T020 Write migration `supabase/migrations/0001_init.sql` (extensions, `public.profiles` table, profiles RLS policies)
-- [X] T021 Write migration `supabase/migrations/0002_games.sql` (`games`, `game_secrets` tables; `game_secrets` deliberately has no RLS SELECT policies)
-- [X] T022 Write migration `supabase/migrations/0003_moves.sql` (`moves` table with append-only convention)
-- [X] T023 Write migration `supabase/migrations/0004_invites.sql` (`invites` table)
-- [X] T024 Write migration `supabase/migrations/0005_rls.sql` (RLS policies: participant-only SELECT on `games`, `players`, `moves`; authenticated-only on `invites`, `dictionaries`)
-- [X] T025 Write migration `supabase/migrations/0006_realtime.sql` (publication on `games`, `moves`, `players`; `game_secrets` deliberately excluded)
-- [X] T026 Write migration `supabase/migrations/0007_dictionaries.sql` (`dictionaries` table + seed `enable-default` row)
-- [X] T027 Write `supabase/seed.sql` with local-dev seed (no real secrets)
+- [x] T020 Write migration `supabase/migrations/0001_init.sql` (extensions, `public.profiles` table, profiles RLS policies)
+- [x] T021 Write migration `supabase/migrations/0002_games.sql` (`games`, `game_secrets` tables; `game_secrets` deliberately has no RLS SELECT policies)
+- [x] T022 Write migration `supabase/migrations/0003_moves.sql` (`moves` table with append-only convention)
+- [x] T023 Write migration `supabase/migrations/0004_invites.sql` (`invites` table)
+- [x] T024 Write migration `supabase/migrations/0005_rls.sql` (RLS policies: participant-only SELECT on `games`, `players`, `moves`; authenticated-only on `invites`, `dictionaries`)
+- [x] T025 Write migration `supabase/migrations/0006_realtime.sql` (publication on `games`, `moves`, `players`; `game_secrets` deliberately excluded)
+- [x] T026 Write migration `supabase/migrations/0007_dictionaries.sql` (`dictionaries` table + seed `enable-default` row)
+- [x] T027 Write `supabase/seed.sql` with local-dev seed (no real secrets)
 
 ### Rules-engine scaffold (test-first)
 
-- [X] T030 [P] Define core domain types in `src/rules/types.ts` (`Tile`, `Letter`, `Rack`, `Coord`, `Board`, `PlacedTile`, `PremiumKind`, `Move`, `CommittedMove`, `ChallengeOutcome`, `GamePhase`, `TimerSetting`, `GameState`, `PlayerState`, `PendingChallenge`, `GameResult`)
-- [X] T031 [P] Write unit tests for seedable RNG in `tests/unit/rules/rng.test.ts`
-- [X] T032 [P] Implement seedable RNG (mulberry32) in `src/rules/rng.ts`
-- [X] T033 [P] Write unit tests for tile distribution in `tests/unit/rules/distribution.test.ts`
-- [X] T034 [P] Implement standard 100-tile English distribution in `src/rules/distribution.ts`
-- [X] T035 [P] Write unit tests for board layout (premiums, center) in `tests/unit/rules/board.test.ts`
-- [X] T036 [P] Implement board factory and premium-square map in `src/rules/board.ts`
-- [X] T037 [P] Write unit tests for bag operations (shuffle/draw/return determinism) in `tests/unit/rules/bag.test.ts`
-- [X] T038 [P] Implement bag operations in `src/rules/bag.ts`
-- [X] T039 [P] Add ESLint test that proves layer-boundary rule fires on a forbidden import in `tests/unit/rules/boundary.test.ts`
+- [x] T030 [P] Define core domain types in `src/rules/types.ts` (`Tile`, `Letter`, `Rack`, `Coord`, `Board`, `PlacedTile`, `PremiumKind`, `Move`, `CommittedMove`, `ChallengeOutcome`, `GamePhase`, `TimerSetting`, `GameState`, `PlayerState`, `PendingChallenge`, `GameResult`)
+- [x] T031 [P] Write unit tests for seedable RNG in `tests/unit/rules/rng.test.ts`
+- [x] T032 [P] Implement seedable RNG (mulberry32) in `src/rules/rng.ts`
+- [x] T033 [P] Write unit tests for tile distribution in `tests/unit/rules/distribution.test.ts`
+- [x] T034 [P] Implement standard 100-tile English distribution in `src/rules/distribution.ts`
+- [x] T035 [P] Write unit tests for board layout (premiums, center) in `tests/unit/rules/board.test.ts`
+- [x] T036 [P] Implement board factory and premium-square map in `src/rules/board.ts`
+- [x] T037 [P] Write unit tests for bag operations (shuffle/draw/return determinism) in `tests/unit/rules/bag.test.ts`
+- [x] T038 [P] Implement bag operations in `src/rules/bag.ts`
+- [x] T039 [P] Add ESLint test that proves layer-boundary rule fires on a forbidden import in `tests/unit/rules/boundary.test.ts`
 
 ### Dictionary infrastructure
 
-- [X] T040 Implement deterministic dictionary builder in `scripts/dictionary-prepare.ts` producing `src/dictionary/default-list.txt`
-- [X] T041 Implement hash verifier in `scripts/dictionary-verify.ts`
-- [X] T042 [P] Write unit tests for dictionary loader in `tests/unit/dictionary/load.test.ts`
-- [X] T043 [P] Implement memoized loader in `src/dictionary/load.ts`
-- [X] T044 [P] Write unit tests for case-insensitive lookup in `tests/unit/dictionary/lookup.test.ts`
-- [X] T045 [P] Implement lookup in `src/dictionary/lookup.ts`
+- [x] T040 Implement deterministic dictionary builder in `scripts/dictionary-prepare.ts` producing `src/dictionary/default-list.txt`
+- [x] T041 Implement hash verifier in `scripts/dictionary-verify.ts`
+- [x] T042 [P] Write unit tests for dictionary loader in `tests/unit/dictionary/load.test.ts`
+- [x] T043 [P] Implement memoized loader in `src/dictionary/load.ts`
+- [x] T044 [P] Write unit tests for case-insensitive lookup in `tests/unit/dictionary/lookup.test.ts`
+- [x] T045 [P] Implement lookup in `src/dictionary/lookup.ts`
 
 ### Persistence and auth scaffolding
 
-- [X] T050 [P] Implement cookies-based server Supabase client in `src/persistence/supabase-server.ts`
-- [X] T051 [P] Implement publishable-key browser client in `src/persistence/supabase-browser.ts`
-- [X] T052 [P] Implement service-role admin client (server-only guard) in `src/persistence/supabase-admin.ts`
-- [X] T053 [P] Implement DTO adapters (DB rows ↔ domain types) in `src/persistence/dto.ts`
-- [X] T054 [P] Implement `getCurrentUser` / `requireUser` in `src/auth/server.ts`
-- [X] T055 [P] Implement Next.js auth middleware in `src/auth/middleware.ts` and wire `middleware.ts` at repo root
+- [x] T050 [P] Implement cookies-based server Supabase client in `src/persistence/supabase-server.ts`
+- [x] T051 [P] Implement publishable-key browser client in `src/persistence/supabase-browser.ts`
+- [x] T052 [P] Implement service-role admin client (server-only guard) in `src/persistence/supabase-admin.ts`
+- [x] T053 [P] Implement DTO adapters (DB rows ↔ domain types) in `src/persistence/dto.ts`
+- [x] T054 [P] Implement `getCurrentUser` / `requireUser` in `src/auth/server.ts`
+- [x] T055 [P] Implement Next.js auth middleware in `src/auth/middleware.ts` and wire `middleware.ts` at repo root
 
 ### Test infrastructure
 
-- [X] T060 [P] Implement deterministic clock helper in `tests/helpers/fake-clock.ts`
-- [X] T061 [P] Implement per-test Supabase reset helper in `tests/helpers/seed-supabase.ts`
-- [X] T062 [P] Implement game-state fixtures in `tests/fixtures/games.ts`
-- [X] T063 [P] Implement board fixtures in `tests/fixtures/boards.ts`
-- [X] T064 [P] Implement deterministic bag fixtures in `tests/fixtures/bags.ts`
-- [X] T065 [P] Implement tiny seeded test dictionaries in `tests/fixtures/dictionaries.ts`
-- [X] T066 [P] Implement two-context Playwright auth helper in `tests/helpers/playwright-setup.ts`
+- [x] T060 [P] Implement deterministic clock helper in `tests/helpers/fake-clock.ts`
+- [x] T061 [P] Implement per-test Supabase reset helper in `tests/helpers/seed-supabase.ts`
+- [x] T062 [P] Implement game-state fixtures in `tests/fixtures/games.ts`
+- [x] T063 [P] Implement board fixtures in `tests/fixtures/boards.ts`
+- [x] T064 [P] Implement deterministic bag fixtures in `tests/fixtures/bags.ts`
+- [x] T065 [P] Implement tiny seeded test dictionaries in `tests/fixtures/dictionaries.ts`
+- [x] T066 [P] Implement two-context Playwright auth helper in `tests/helpers/playwright-setup.ts`
 
 ### UI shell
 
-- [X] T070 [P] Bootstrap shadcn/ui (Button, Dialog, Input, Toast) into `src/ui/components/primitives/` via the shadcn CLI
-- [X] T071 [P] Implement shared header and signed-in shell in `src/ui/components/shell/AppShell.tsx`
+- [x] T070 [P] Bootstrap shadcn/ui (Button, Dialog, Input, Toast) into `src/ui/components/primitives/` via the shadcn CLI
+- [x] T071 [P] Implement shared header and signed-in shell in `src/ui/components/shell/AppShell.tsx`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -130,33 +130,33 @@ fidelity, robustness, and polish.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T100 [P] [US1] Integration test create→join→start happy path in `tests/integration/actions/create-and-join.test.ts`
-- [ ] T101 [P] [US1] Integration test lobby edge cases (invite reuse, full lobby, host-only-start, lobby-not-full) in `tests/integration/actions/lobby-edge-cases.test.ts`
-- [ ] T102 [P] [US1] Integration test profile.setDisplayName in `tests/integration/actions/profile.test.ts`
-- [ ] T103 [P] [US1] Playwright spec: sign-in flow with screenshot in `tests/e2e/auth.spec.ts`
-- [ ] T104 [P] [US1] Playwright spec: create + join lobby in two contexts with screenshots in `tests/e2e/lobby.spec.ts`
+- [x] T100 [P] [US1] Integration test create→join→start happy path in `tests/integration/actions/create-and-join.test.ts`
+- [x] T101 [P] [US1] Integration test lobby edge cases (invite reuse, full lobby, host-only-start, lobby-not-full) in `tests/integration/actions/lobby-edge-cases.test.ts`
+- [x] T102 [P] [US1] Integration test profile.setDisplayName in `tests/integration/actions/profile.test.ts`
+- [x] T103 [P] [US1] Playwright spec: sign-in flow with screenshot in `tests/e2e/auth.spec.ts`
+- [x] T104 [P] [US1] Playwright spec: create + join lobby in two contexts with screenshots in `tests/e2e/lobby.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T110 [P] [US1] Implement `src/persistence/games.repo.ts` (insert, fetch by id, update phase/active_slot)
-- [ ] T111 [P] [US1] Implement `src/persistence/players.repo.ts` (insert slot, fetch by game, update score/rack_count/connected)
-- [ ] T112 [P] [US1] Implement `src/persistence/invites.repo.ts` (generate URL-safe code, consume single-use)
-- [ ] T113 [P] [US1] Implement `src/persistence/profiles.repo.ts` (read/update display name)
-- [ ] T114 [US1] Implement `createGame` Server Action with Zod schema in `app/actions/games.ts`
-- [ ] T115 [US1] Implement `joinGame` Server Action in `app/actions/games.ts`
-- [ ] T116 [US1] Implement `startGame` Server Action (deals racks via `game_secrets`, picks first slot, sets `turn_started_at` + `turn_deadline_at`) in `app/actions/games.ts`
-- [ ] T117 [US1] Implement `leaveLobby` Server Action in `app/actions/games.ts`
-- [ ] T118 [US1] Implement `listMyGames` Server Action in `app/actions/games.ts`
-- [ ] T119 [US1] Implement `setDisplayName` Server Action in `app/actions/profile.ts`
-- [ ] T120 [P] [US1] Implement magic-link sign-in form at `app/(auth)/sign-in/page.tsx`
-- [ ] T121 [P] [US1] Implement Supabase auth callback at `app/(auth)/callback/route.ts`
-- [ ] T122 [P] [US1] Implement signed-in home with "Your games" + "New game" CTA at `app/(app)/home/page.tsx`
-- [ ] T123 [US1] Implement game creation form (timer + dictionary + visibility=invite-only) at `app/(app)/games/new/page.tsx`
-- [ ] T124 [US1] Implement lobby view at `app/(app)/games/[gameId]/lobby/page.tsx`
-- [ ] T125 [US1] Implement join-via-invite at `app/(app)/games/join/[invite]/page.tsx`
-- [ ] T126 [P] [US1] Implement `src/ui/components/lobby/InviteCodeBox.tsx` (copyable invite + link)
-- [ ] T127 [P] [US1] Implement `src/ui/components/lobby/LobbyView.tsx` (player list, host badge, start gated on full lobby)
-- [ ] T128 [P] [US1] Implement first-time display-name prompt component in `src/ui/components/auth/DisplayNamePrompt.tsx`
+- [x] T110 [P] [US1] Implement `src/persistence/games.repo.ts` (insert, fetch by id, update phase/active_slot)
+- [x] T111 [P] [US1] Implement `src/persistence/players.repo.ts` (insert slot, fetch by game, update score/rack_count/connected)
+- [x] T112 [P] [US1] Implement `src/persistence/invites.repo.ts` (generate URL-safe code, consume single-use)
+- [x] T113 [P] [US1] Implement `src/persistence/profiles.repo.ts` (read/update display name)
+- [x] T114 [US1] Implement `createGame` Server Action with Zod schema in `app/actions/games.ts`
+- [x] T115 [US1] Implement `joinGame` Server Action in `app/actions/games.ts`
+- [x] T116 [US1] Implement `startGame` Server Action (deals racks via `game_secrets`, picks first slot, sets `turn_started_at` + `turn_deadline_at`) in `app/actions/games.ts`
+- [x] T117 [US1] Implement `leaveLobby` Server Action in `app/actions/games.ts`
+- [x] T118 [US1] Implement `listMyGames` Server Action in `app/actions/games.ts`
+- [x] T119 [US1] Implement `setDisplayName` Server Action in `app/actions/profile.ts`
+- [x] T120 [P] [US1] Implement magic-link sign-in form at `app/(auth)/sign-in/page.tsx`
+- [x] T121 [P] [US1] Implement Supabase auth callback at `app/auth/callback/route.ts` (deviation from plan: route group dropped so the URL matches middleware allow-list `/auth/*`)
+- [x] T122 [P] [US1] Implement signed-in home with "Your games" + "New game" CTA at `app/(app)/home/page.tsx`
+- [x] T123 [US1] Implement game creation form (timer + dictionary + visibility=invite-only) at `app/(app)/games/new/page.tsx`
+- [x] T124 [US1] Implement lobby view at `app/(app)/games/[gameId]/lobby/page.tsx`
+- [x] T125 [US1] Implement join-via-invite at `app/(app)/games/join/[invite]/page.tsx`
+- [x] T126 [P] [US1] Implement `src/ui/components/lobby/InviteCodeBox.tsx` (copyable invite + link)
+- [x] T127 [P] [US1] Implement `src/ui/components/lobby/LobbyView.tsx` (player list, host badge, start gated on full lobby)
+- [x] T128 [P] [US1] Implement first-time display-name prompt component in `src/ui/components/auth/DisplayNamePrompt.tsx`
 
 **Checkpoint**: US1 is fully functional and testable independently — two players reach a started game.
 
@@ -170,57 +170,57 @@ fidelity, robustness, and polish.
 
 ### Tests for User Story 2 ⚠️ (test-first per Principle VI)
 
-- [ ] T200 [P] [US2] Unit test placement validation in `tests/unit/rules/placement.test.ts` (center, single line, contiguity, connection, blank-assigned)
-- [ ] T201 [P] [US2] Unit test word identification in `tests/unit/rules/words.test.ts` (main word + cross-words)
-- [ ] T202 [P] [US2] Unit test scoring in `tests/unit/rules/scoring.test.ts` (letter/word premiums, premium-only-on-first-use, bingo bonus)
-- [ ] T203 [P] [US2] Unit test exchange validation in `tests/unit/rules/exchange.test.ts` (1–7, bag ≥ 7, tile-on-rack)
-- [ ] T204 [P] [US2] Unit test `applyMove` orchestration in `tests/unit/rules/apply.test.ts` (rack mutation, refill, seq increment, deterministic result)
-- [ ] T205 [P] [US2] Integration test `placeMove` happy + invalid + concurrency in `tests/integration/actions/place-move.test.ts`
-- [ ] T206 [P] [US2] Integration test `passTurn` and `exchangeTiles` in `tests/integration/actions/pass-exchange.test.ts`
-- [ ] T207 [P] [US2] Playwright spec: full place-submit-history flow with screenshots in `tests/e2e/play-turn.spec.ts`
+- [x] T200 [P] [US2] Unit test placement validation in `tests/unit/rules/placement.test.ts` (center, single line, contiguity, connection, blank-assigned)
+- [x] T201 [P] [US2] Unit test word identification in `tests/unit/rules/words.test.ts` (main word + cross-words)
+- [x] T202 [P] [US2] Unit test scoring in `tests/unit/rules/scoring.test.ts` (letter/word premiums, premium-only-on-first-use, bingo bonus)
+- [x] T203 [P] [US2] Unit test exchange validation in `tests/unit/rules/exchange.test.ts` (1–7, bag ≥ 7, tile-on-rack)
+- [x] T204 [P] [US2] Unit test `applyMove` orchestration in `tests/unit/rules/apply.test.ts` (rack mutation, refill, seq increment, deterministic result)
+- [x] T205 [P] [US2] Integration test `placeMove` happy + invalid + concurrency in `tests/integration/actions/place-move.test.ts`
+- [x] T206 [P] [US2] Integration test `passTurn` and `exchangeTiles` in `tests/integration/actions/pass-exchange.test.ts`
+- [x] T207 [P] [US2] Playwright spec: full place-submit-history flow with screenshots in `tests/e2e/play-turn.spec.ts`
 
 ### Rules implementation for User Story 2
 
-- [ ] T210 [P] [US2] Implement placement validator in `src/rules/placement.ts`
-- [ ] T211 [P] [US2] Implement word identifier in `src/rules/words.ts`
-- [ ] T212 [P] [US2] Implement scoring in `src/rules/scoring.ts`
-- [ ] T213 [P] [US2] Implement exchange validator in `src/rules/exchange.ts`
-- [ ] T214 [US2] Implement `applyMove` in `src/rules/apply.ts` (depends on T210–T213)
+- [x] T210 [P] [US2] Implement placement validator in `src/rules/placement.ts`
+- [x] T211 [P] [US2] Implement word identifier in `src/rules/words.ts`
+- [x] T212 [P] [US2] Implement scoring in `src/rules/scoring.ts`
+- [x] T213 [P] [US2] Implement exchange validator in `src/rules/exchange.ts`
+- [x] T214 [US2] Implement `applyMove` in `src/rules/apply.ts` (depends on T210–T213)
 
 ### Persistence and orchestration for User Story 2
 
-- [ ] T220 [P] [US2] Implement `src/persistence/moves.repo.ts` (insert with `seq = max+1`, optimistic-concurrency-aware)
-- [ ] T221 [US2] Implement `src/orchestration/game-engine.ts` (load full state → applyMove → persist atomically)
-- [ ] T222 [US2] Implement optimistic-concurrency helpers in `src/orchestration/conflict.ts`
-- [ ] T223 [US2] Implement phase transitions in `src/orchestration/transitions.ts` (`playing → playing` after pass/exchange)
+- [x] T220 [P] [US2] Implement `src/persistence/moves.repo.ts` (insert with `seq = max+1`, optimistic-concurrency-aware)
+- [x] T221 [US2] Implement `src/orchestration/game-engine.ts` (load full state → applyMove → persist atomically)
+- [x] T222 [US2] Implement optimistic-concurrency helpers in `src/orchestration/conflict.ts`
+- [x] T223 [US2] Implement phase transitions in `src/orchestration/transitions.ts` (`playing → playing` after pass/exchange)
 
 ### Server Actions for User Story 2
 
-- [ ] T230 [US2] Implement `placeMove` Server Action in `app/actions/moves.ts` (depends on T214, T221)
-- [ ] T231 [US2] Implement `passTurn` Server Action in `app/actions/moves.ts`
-- [ ] T232 [US2] Implement `exchangeTiles` Server Action in `app/actions/moves.ts`
+- [x] T230 [US2] Implement `placeMove` Server Action in `app/actions/moves.ts` (depends on T214, T221)
+- [x] T231 [US2] Implement `passTurn` Server Action in `app/actions/moves.ts`
+- [x] T232 [US2] Implement `exchangeTiles` Server Action in `app/actions/moves.ts`
 
 ### Realtime read path
 
-- [ ] T240 [P] [US2] Implement subscription wiring in `src/realtime/game-channel.ts`
-- [ ] T241 [P] [US2] Implement `src/ui/hooks/use-game-channel.ts` (subscribe + reconcile + seq-gap refetch)
+- [x] T240 [P] [US2] Implement subscription wiring in `src/realtime/game-channel.ts`
+- [x] T241 [P] [US2] Implement `src/ui/hooks/use-game-channel.ts` (subscribe + reconcile + seq-gap refetch)
 
 ### UI for User Story 2
 
-- [ ] T250 [P] [US2] Implement board grid in `src/ui/components/board/BoardCanvas.tsx`
-- [ ] T251 [P] [US2] Implement single square (with premium label) in `src/ui/components/board/Square.tsx`
-- [ ] T252 [P] [US2] Implement rack with dnd-kit + tap fallback in `src/ui/components/rack/Rack.tsx`
-- [ ] T253 [P] [US2] Implement tile chip in `src/ui/components/rack/TileChip.tsx`
-- [ ] T254 [P] [US2] Implement rack controls (shuffle, recall) in `src/ui/components/rack/RackControls.tsx`
-- [ ] T255 [P] [US2] Implement submit button with inline rejection reason in `src/ui/components/controls/SubmitButton.tsx`
-- [ ] T256 [P] [US2] Implement pass button with confirm dialog in `src/ui/components/controls/PassButton.tsx`
-- [ ] T257 [P] [US2] Implement exchange dialog (1–7 tiles, disabled when bag < 7) in `src/ui/components/controls/ExchangeDialog.tsx`
-- [ ] T258 [P] [US2] Implement blank-tile assignment dialog in `src/ui/components/rack/BlankTileDialog.tsx`
-- [ ] T259 [P] [US2] Implement move history list in `src/ui/components/moves/MoveHistoryList.tsx`
-- [ ] T260 [P] [US2] Implement move row in `src/ui/components/moves/MoveRow.tsx`
-- [ ] T261 [P] [US2] Implement tentative-board hook in `src/ui/hooks/use-tentative-board.ts`
-- [ ] T262 [P] [US2] Implement inline rejection feedback in `src/ui/components/feedback/RejectionInline.tsx`
-- [ ] T263 [US2] Implement in-game page composing board + rack + controls + history at `app/(app)/games/[gameId]/play/page.tsx`
+- [x] T250 [P] [US2] Implement board grid in `src/ui/components/board/BoardCanvas.tsx`
+- [x] T251 [P] [US2] Implement single square (with premium label) in `src/ui/components/board/Square.tsx`
+- [x] T252 [P] [US2] Implement rack with dnd-kit + tap fallback in `src/ui/components/rack/Rack.tsx` (deviation: tap-to-select-then-tap-square interaction model for v1; dnd-kit drag/drop deferred to US7 polish)
+- [x] T253 [P] [US2] Implement tile chip in `src/ui/components/rack/TileChip.tsx`
+- [x] T254 [P] [US2] Implement rack controls (shuffle, recall) in `src/ui/components/rack/RackControls.tsx`
+- [x] T255 [P] [US2] Implement submit button with inline rejection reason in `src/ui/components/controls/SubmitButton.tsx`
+- [x] T256 [P] [US2] Implement pass button with confirm dialog in `src/ui/components/controls/PassButton.tsx`
+- [x] T257 [P] [US2] Implement exchange dialog (1–7 tiles, disabled when bag < 7) in `src/ui/components/controls/ExchangeDialog.tsx`
+- [x] T258 [P] [US2] Implement blank-tile assignment dialog in `src/ui/components/rack/BlankTileDialog.tsx`
+- [x] T259 [P] [US2] Implement move history list in `src/ui/components/moves/MoveHistoryList.tsx`
+- [x] T260 [P] [US2] Implement move row in `src/ui/components/moves/MoveRow.tsx`
+- [x] T261 [P] [US2] Implement tentative-board hook in `src/ui/hooks/use-tentative-board.ts`
+- [x] T262 [P] [US2] Implement inline rejection feedback in `src/ui/components/feedback/RejectionInline.tsx`
+- [x] T263 [US2] Implement in-game page composing board + rack + controls + history at `app/(app)/games/[gameId]/play/page.tsx`
 
 **Checkpoint**: US2 — full move loop works (place, submit, score, refill, sync to opponent within 2s).
 

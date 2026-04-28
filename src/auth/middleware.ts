@@ -2,7 +2,7 @@
 // the (app) routes behind authentication. Public routes — landing page, sign-in,
 // auth callback — pass through unauthenticated.
 
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_PATH_PREFIXES = ['/_next', '/api/server-time', '/auth', '/sign-in'];
@@ -24,7 +24,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }

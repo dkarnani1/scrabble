@@ -1,5 +1,13 @@
-import nextPlugin from 'eslint-config-next';
+// ESLint 9 flat config. We deliberately do NOT extend `eslint-config-next` from a
+// flat-config file: that package targets the legacy `.eslintrc` format and triggers
+// `@rushstack/eslint-patch`, which is incompatible with ESLint 9's flat-config loader
+// and aborts the lint pipeline (see lint-staged failure on commit). The Next-specific
+// rules (react/* and next/*) are exercised at build time via `next build`'s integrated
+// type+lint pass on Vercel; this config exists for the constitutional layer-boundary
+// rule that protects `src/rules/**`.
+
 import importPlugin from 'eslint-plugin-import';
+import tsParser from '@typescript-eslint/parser';
 
 const restrictedRulesEngineImports = [
   'react',
@@ -22,7 +30,17 @@ export default [
       'src/dictionary/default-list.txt',
     ],
   },
-  ...nextPlugin,
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
+    },
+  },
   {
     files: ['src/rules/**/*.{ts,tsx}'],
     plugins: { import: importPlugin },

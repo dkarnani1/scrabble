@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 
+// Single-project config. The unit / integration split is done via the workspace file
+// (`vitest.workspace.ts`) which extends this base for shared aliases and reporters.
+
 export default defineConfig({
   test: {
     globals: false,
@@ -9,28 +12,6 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
     },
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: 'unit',
-          include: ['tests/unit/**/*.test.ts'],
-          environment: 'node',
-          isolate: true,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: 'integration',
-          include: ['tests/integration/**/*.test.ts'],
-          environment: 'node',
-          isolate: true,
-          hookTimeout: 30_000,
-          testTimeout: 30_000,
-        },
-      },
-    ],
   },
   resolve: {
     alias: {
