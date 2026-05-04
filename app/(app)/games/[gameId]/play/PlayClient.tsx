@@ -13,11 +13,17 @@ import { MoveHistoryList } from '@ui/components/moves/MoveHistoryList';
 import { RejectionInline, reasonToMessage } from '@ui/components/feedback/RejectionInline';
 import { useTentativeBoard } from '@ui/hooks/use-tentative-board';
 import { useGameChannel } from '@ui/hooks/use-game-channel';
+import { usePresenceHeartbeat } from '@ui/hooks/use-presence-heartbeat';
+import { PresenceIndicator } from '@ui/components/play/PresenceIndicator';
+import { TurnBanner } from '@ui/components/play/TurnBanner';
 import { TimerDisplay } from '@ui/components/timer/TimerDisplay';
+import { ChallengeWindow } from '@ui/components/challenge/ChallengeWindow';
+import { ChallengeOutcomeBanner } from '@ui/components/challenge/ChallengeOutcomeBanner';
 import { placeMove, passTurn, exchangeTiles } from '@/app/actions/moves';
+import { raiseChallenge } from '@/app/actions/challenges';
 import { getGameView } from '@/app/actions/games';
 import type { GameView } from '@/app/actions/types';
-import type { Letter, PlayerSlot } from '@rules/types';
+import type { ChallengeOutcome, Letter, PlayerSlot } from '@rules/types';
 import { Button } from '@ui/components/primitives';
 
 export type PlayClientProps = {
@@ -56,10 +62,33 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
     onRefetch: refetch,
   });
 
+  usePresenceHeartbeat({
+    gameId: view.id,
+    enabled: view.phase === 'playing' || view.phase === 'challenge-window',
+  });
+
   const me = view.players.find((p) => p.userId === myUserId);
   const opponent = view.players.find((p) => p.userId !== myUserId);
   const mySlot = (me?.slot ?? null) as PlayerSlot | null;
   const isMyTurn = mySlot !== null && view.activeSlot === mySlot && view.phase === 'playing';
+
+  const lastMove = view.history.at(-1);
+  const inChallengeWindow = view.phase === 'challenge-window';
+  const placerSlot = lastMove && lastMove.move.kind === 'place' ? lastMove.move.playerSlot : null;
+  const canChallenge =
+    inChallengeWindow && placerSlot !== null && mySlot !== null && mySlot !== placerSlot;
+  const placedAt =
+    inChallengeWindow && lastMove && lastMove.move.kind === 'place'
+      ? lastMove.move.createdAt
+      : null;
+
+  const [recentOutcome, setRecentOutcome] = React.useState<ChallengeOutcome | null>(null);
+  React.useEffect(() => {
+    const c = lastMove?.challenge;
+    if (c && (c.kind === 'challenged-invalid' || c.kind === 'challenged-valid')) {
+      setRecentOutcome(c);
+    }
+  }, [lastMove]);
 
   const lastMoveCells = React.useMemo(() => {
     const last = view.history.at(-1);
@@ -123,6 +152,22 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
     });
   };
 
+  const onChallenge = () => {
+    if (!lastMove || lastMove.move.kind !== 'place') return;
+    setError(null);
+    startTransition(async () => {
+      const result = await raiseChallenge({
+        gameId: view.id,
+        moveSeq: lastMove.move.seq,
+      });
+      if (!result.ok) {
+        setError('Challenge could not be raised.');
+        return;
+      }
+      setView(result.data);
+    });
+  };
+
   const onExchange = (indices: number[]) => {
     setError(null);
     startTransition(async () => {
@@ -140,20 +185,32 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   for (const p of view.players) displayNameBySlot[p.slot] = p.displayName;
 
   return (
-    <div className="grid gap-6 py-2 md:grid-cols-[minmax(0,1fr)_320px]">
-      <section className="space-y-4">
-        <header className="flex items-baseline justify-between">
-          <div>
+    <div className="grid gap-6 py-2 pb-28 md:grid-cols-[minmax(0,1fr)_320px] sm:pb-2">
+      <section className="min-w-0 space-y-4">
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-2">
             <h1 className="text-xl font-semibold">
               {me?.displayName ?? 'You'} vs {opponent?.displayName ?? 'Opponent'}
             </h1>
-            <p className="text-sm text-tile-ink/70">
-              {isMyTurn
-                ? 'Your turn'
-                : view.phase === 'playing'
-                  ? `${opponent?.displayName ?? 'Opponent'}’s turn`
-                  : view.phase}
-            </p>
+            <TurnBanner
+              state={
+                view.phase === 'completed' || view.phase === 'abandoned'
+                  ? 'completed'
+                  : view.phase === 'challenge-window' || view.phase === 'resolving-challenge'
+                    ? 'window'
+                    : isMyTurn
+                      ? 'mine'
+                      : 'theirs'
+              }
+              opponentName={opponent?.displayName ?? 'Opponent'}
+            />
+            {opponent && (
+              <PresenceIndicator
+                displayName={opponent.displayName}
+                lastSeenAt={opponent.lastSeenAt}
+                connected={opponent.connected}
+              />
+            )}
           </div>
           <div className="flex items-center gap-3 text-sm">
             <TimerDisplay
@@ -166,6 +223,34 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
             <span className="text-xs text-tile-ink/60">{view.bagRemaining} in bag</span>
           </div>
         </header>
+
+        {placedAt && (
+          <ChallengeWindow
+            placedAt={placedAt}
+            serverNow={view.serverNow}
+            canChallenge={canChallenge}
+            pending={pending}
+            onChallenge={onChallenge}
+          />
+        )}
+
+        {recentOutcome && (
+          <ChallengeOutcomeBanner
+            outcome={recentOutcome}
+            placerName={
+              placerSlot !== null
+                ? (view.players.find((p) => p.slot === placerSlot)?.displayName ?? 'Placer')
+                : 'Placer'
+            }
+            challengerName={
+              recentOutcome.kind !== 'unchallenged'
+                ? (view.players.find((p) => p.slot === recentOutcome.challengerSlot)?.displayName ??
+                  'Challenger')
+                : 'Challenger'
+            }
+            onDismiss={() => setRecentOutcome(null)}
+          />
+        )}
 
         <BoardCanvas
           board={view.board}

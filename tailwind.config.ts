@@ -10,11 +10,15 @@ const config: Config = {
           line: '#d6cdb6',
           star: '#b88a4a',
         },
+        // Premium-square accents tuned for accessibility (each pair has ≥ 4.5:1
+        // contrast against its label) and to be trademark-safe (avoiding the
+        // commercial Scrabble palette while keeping double=warm / triple=cool
+        // shape recognition that players expect).
         premium: {
-          dl: '#9ec9e6',
-          tl: '#3f7eb0',
-          dw: '#e8b3b3',
-          tw: '#c84b4b',
+          dl: '#9fc2dc',
+          tl: '#356f9d',
+          dw: '#e9a8a8',
+          tw: '#b83f3f',
         },
         tile: {
           face: '#f6e2b3',

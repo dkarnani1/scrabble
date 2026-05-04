@@ -13,14 +13,24 @@ export type RackProps = {
 
 export function Rack({ slots, selectedRackIndex, onSelectTile, disabled }: RackProps) {
   return (
-    <div className="flex items-center justify-center gap-2 rounded-md border border-board-line bg-board-base/60 p-3">
+    <div
+      className={[
+        // On small screens stick the rack to the bottom of the viewport like a sheet
+        // so the player's tiles are always reachable with one thumb. md+ collapses to
+        // an inline strip beneath the board.
+        'flex flex-wrap items-center justify-center gap-2 rounded-md border border-board-line bg-board-base/80 p-3 backdrop-blur-sm',
+        'sm:static sm:max-w-full',
+        'fixed inset-x-2 bottom-2 z-20 shadow-lg sm:relative sm:inset-auto sm:bottom-auto sm:shadow-none',
+      ].join(' ')}
+      role="group"
+      aria-label="Your tile rack"
+    >
       {slots.length === 0 && <span className="text-sm text-tile-ink/60">Rack empty</span>}
       {slots.map((slot) =>
         slot.placedAt !== null ? (
-          // Placed slots show a faded placeholder so the rack keeps its 7-tile layout.
           <div
             key={slot.rackIndex}
-            className="h-12 w-12 rounded-md border border-dashed border-board-line bg-board-base/30"
+            className="h-11 w-11 rounded-md border border-dashed border-board-line bg-board-base/30 sm:h-12 sm:w-12"
             aria-label="placed on board"
           />
         ) : (

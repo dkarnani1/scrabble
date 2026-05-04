@@ -57,9 +57,12 @@ export async function signInAs(context: BrowserContext, player: TestPlayer): Pro
   await page.close();
 }
 
-export async function openTwoPlayerSession(browser: Browser): Promise<TwoPlayerSession> {
-  const a = await browser.newContext();
-  const b = await browser.newContext();
+export async function openTwoPlayerSession(
+  browser: Browser,
+  options: { viewport?: { width: number; height: number } } = {},
+): Promise<TwoPlayerSession> {
+  const a = await browser.newContext(options);
+  const b = await browser.newContext(options);
   const playerA: TestPlayer = {
     userId: 'fixture-a',
     email: `playera+${Date.now()}@example.test`,

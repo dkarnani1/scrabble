@@ -276,6 +276,37 @@ function zodToError(error: z.ZodError): {
 // Re-export the profile lookup used by the home page so the import surface stays small.
 export { getProfilesByIds };
 
+// ---- getMyRack -------------------------------------------------------------------
+
+const getMyRackSchema = z.object({ gameId: z.string().uuid() });
+
+export async function getMyRack(
+  input: z.input<typeof getMyRackSchema>,
+): Promise<ActionResult<{ rack: import('@rules/types').Rack | null }>> {
+  const parsed = getMyRackSchema.safeParse(input);
+  if (!parsed.success) return err(zodToError(parsed.error));
+
+  const user = await getCurrentUser();
+  if (!user) return err({ code: 'unauthenticated' });
+
+  const me = await findPlayerByUser(parsed.data.gameId, user.id);
+  if (!me) return err({ code: 'forbidden', reason: 'not-a-participant' });
+
+  const secrets = await getGameSecrets(parsed.data.gameId);
+  if (!secrets) return err({ code: 'not-found', entity: 'game' });
+
+  const rack: import('@rules/types').Rack | null =
+    me.slot === 0
+      ? secrets.rack_slot_0
+      : me.slot === 1
+        ? secrets.rack_slot_1
+        : me.slot === 2
+          ? (secrets.rack_slot_2 ?? null)
+          : (secrets.rack_slot_3 ?? null);
+
+  return ok({ rack });
+}
+
 // ---- rematch ---------------------------------------------------------------------
 
 const rematchSchema = z.object({ priorGameId: z.string().uuid() });
@@ -318,11 +349,14 @@ export async function getGameView(
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
 
-  // Preflight: resolve any expired turn deadline so reads reflect the corrected state.
-  // This is where the lazy timer enforcement runs for the play page's initial render
-  // and for every refetch the realtime channel triggers.
-  const { resolveIfExpired } = await import('@orchestration/timers');
-  await resolveIfExpired(parsed.data.gameId, new Date());
+  // Preflight: resolve any expired turn deadline AND challenge window so reads reflect
+  // the corrected state. This is where the lazy timer enforcement runs for the play
+  // page's initial render and for every refetch the realtime channel triggers.
+  const { resolveIfExpired, resolveChallengeWindowIfExpired } =
+    await import('@orchestration/timers');
+  const now = new Date();
+  await resolveIfExpired(parsed.data.gameId, now);
+  await resolveChallengeWindowIfExpired(parsed.data.gameId, now);
 
   const view = await loadGameView({ gameId: parsed.data.gameId, callerUserId: user.id });
   if (!view) return err({ code: 'not-found', entity: 'game' });

@@ -142,6 +142,7 @@ export async function commitAction(args: {
     expectedNextSeq,
     playerSlot: args.action.playerSlot,
     move: newMove,
+    refillCount: result.refillDraws.length,
   });
   if (!insert.ok) {
     if (insert.reason === 'seq-conflict') {

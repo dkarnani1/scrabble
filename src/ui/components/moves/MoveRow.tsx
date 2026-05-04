@@ -17,6 +17,10 @@ export function MoveRow({ committed, playerName }: MoveRowProps) {
       : challenge.kind === 'challenged-valid'
         ? 'upheld'
         : null;
+  const disputedWords =
+    challenge.kind === 'challenged-invalid' && challenge.invalidWords.length > 0
+      ? challenge.invalidWords.join(', ')
+      : null;
 
   return (
     <li className="flex items-baseline justify-between gap-2 rounded-md border border-board-line bg-board-base/50 px-3 py-2 text-sm">
@@ -38,6 +42,9 @@ export function MoveRow({ committed, playerName }: MoveRowProps) {
           >
             challenge {challengeBadge}
           </span>
+        )}
+        {disputedWords && (
+          <span className="text-[10px] text-premium-tw/80">disputed: {disputedWords}</span>
         )}
       </div>
       <div className="text-right">

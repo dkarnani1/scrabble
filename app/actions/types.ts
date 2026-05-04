@@ -70,6 +70,7 @@ export type GameView = {
     isHost: boolean;
     forfeitNext: boolean;
     connected: boolean;
+    lastSeenAt: string | null;
   }>;
   myRack: Rack | null;
   result: GameResult | null;

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@ui/components/shell/AppShell';
 import { DisplayNamePrompt } from '@ui/components/auth/DisplayNamePrompt';
+import { InProgressList } from '@ui/components/home/InProgressList';
 import { getCurrentUser } from '@auth/server';
 import { getProfile } from '@persistence/profiles.repo';
 import { listMyGames } from '@/app/actions/games';
@@ -44,44 +45,7 @@ export default async function HomePage() {
           </Link>
         </header>
 
-        {active.length === 0 ? (
-          <p className="rounded-md border border-dashed border-board-line bg-board-base/40 px-4 py-8 text-center text-sm text-tile-ink/70">
-            No active games yet.
-            <br />
-            Start a new game and invite a friend.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {active.map((g) => {
-              const opponent = g.players.find((p) => p.userId !== user.id);
-              const me = g.players.find((p) => p.userId === user.id);
-              const isMyTurn = g.activeSlot != null && me?.slot === g.activeSlot;
-              const target = g.phase === 'lobby' ? `/games/${g.id}/lobby` : `/games/${g.id}/play`;
-              return (
-                <li key={g.id}>
-                  <Link
-                    href={target}
-                    className="flex items-center justify-between rounded-md border border-board-line bg-board-base/60 px-4 py-3 hover:bg-board-line/30"
-                  >
-                    <span className="flex flex-col">
-                      <span className="font-medium">vs {opponent?.displayName ?? 'waiting…'}</span>
-                      <span className="text-xs text-tile-ink/60">
-                        {g.phase === 'lobby'
-                          ? 'Lobby'
-                          : g.phase === 'playing'
-                            ? isMyTurn
-                              ? 'Your turn'
-                              : 'Their turn'
-                            : g.phase}
-                      </span>
-                    </span>
-                    <span className="text-xs text-tile-edge">Open →</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <InProgressList games={active} myUserId={user.id} />
       </section>
 
       <section className="mt-10 rounded-md border border-board-line bg-board-base/40 p-4">

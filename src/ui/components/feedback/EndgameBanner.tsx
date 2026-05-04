@@ -32,11 +32,11 @@ export function EndgameBanner({
   return (
     <section
       className={cn(
-        'rounded-lg border p-5 shadow-sm',
+        'rounded-lg border p-5 shadow-sm transition-all duration-500 ease-out',
         isTie
           ? 'border-board-line bg-board-base/70'
           : youWon
-            ? 'border-tile-edge bg-tile-edge/10'
+            ? 'border-tile-edge bg-gradient-to-br from-tile-edge/15 via-tile-face/30 to-board-base/60'
             : 'border-board-line bg-board-base/70',
         className,
       )}
@@ -44,7 +44,18 @@ export function EndgameBanner({
     >
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-tile-edge">Game over</p>
       <h2 className="mt-1 text-2xl font-semibold">
-        {isTie ? 'It’s a tie.' : youWon ? 'You won!' : `${winnerName} wins`}
+        {isTie ? (
+          <>It&rsquo;s a tie.</>
+        ) : youWon ? (
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden className="inline-block animate-bounce">
+              🏆
+            </span>
+            You won!
+          </span>
+        ) : (
+          <>{winnerName} wins</>
+        )}
       </h2>
       <p className="mt-1 text-sm text-tile-ink/70">{REASON_LABEL[result.endedReason]}</p>
     </section>

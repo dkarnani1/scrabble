@@ -12,6 +12,10 @@ export type InsertMoveInput = {
   expectedNextSeq: number;
   playerSlot: PlayerSlot;
   move: CommittedMove['move'];
+  /** For place moves: how many tiles were drawn from the bag to refill the rack. Stored
+   * inside the jsonb payload so challenge reversal can deterministically restore the
+   * placer's rack. */
+  refillCount?: number;
 };
 
 export type InsertMoveResult =
@@ -21,7 +25,7 @@ export type InsertMoveResult =
 export async function insertMove(input: InsertMoveInput): Promise<InsertMoveResult> {
   const sb = getSupabaseAdminClient();
 
-  const payload = buildPayload(input.move);
+  const payload = buildPayload(input.move, input.refillCount);
   const passReason = input.move.kind === 'pass' ? input.move.reason : null;
   const score = input.move.kind === 'place' ? input.move.score : 0;
   const words = input.move.kind === 'place' ? input.move.words : [];
@@ -90,8 +94,16 @@ export async function updateChallengeOutcome(
   if (error) throw error;
 }
 
-function buildPayload(move: CommittedMove['move']): unknown {
-  if (move.kind === 'place') return { tiles: move.tiles };
+function buildPayload(move: CommittedMove['move'], refillCount?: number): unknown {
+  if (move.kind === 'place') {
+    return { tiles: move.tiles, refillCount: refillCount ?? move.tiles.length };
+  }
   if (move.kind === 'pass') return { reason: move.reason };
   return { count: move.count };
 }
+
+/** Re-export the place-payload type so orchestration can read refillCount on challenge. */
+export type PlaceMovePayload = {
+  tiles: Array<{ coord: { r: number; c: number }; tile: unknown }>;
+  refillCount?: number;
+};

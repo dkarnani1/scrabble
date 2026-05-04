@@ -35,13 +35,21 @@ export function useGameChannel({ gameId, currentSeq, onRefetch }: UseGameChannel
         // when refetch lands. If there is a gap, force a refetch as well — same call,
         // but logged so we can tell the difference in CI.
         if (seq > seqRef.current + 1) {
-           
           console.warn(`[game-channel] seq gap: have ${seqRef.current}, got ${seq}`);
         }
       }
       refetch();
     };
-    const unsubscribe = subscribeToGame({ gameId, onChange });
+    const unsubscribe = subscribeToGame({
+      gameId,
+      onChange,
+      onStatusChange: (status) => {
+        // On (re)subscribe, force a full refetch so any state we missed while the
+        // socket was down lands immediately. This is the reconnect-reconciliation path
+        // for FR-070..072 (US6).
+        if (status === 'subscribed' && !cancelled) refetch();
+      },
+    });
     return () => {
       cancelled = true;
       void unsubscribe();

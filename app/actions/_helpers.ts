@@ -55,6 +55,7 @@ export async function loadGameView(args: {
         isHost: p.is_host,
         forfeitNext: p.forfeit_next,
         connected: p.connected,
+        lastSeenAt: p.last_seen_at,
       })),
     myRack,
     result: game.result,

@@ -7,7 +7,7 @@
 // secret prevents external triggering.
 
 import { NextResponse } from 'next/server';
-import { sweepDueDeadlines } from '@orchestration/timers';
+import { sweepDueDeadlines, sweepDueChallengeWindows } from '@orchestration/timers';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -23,6 +23,12 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const result = await sweepDueDeadlines(new Date());
-  return NextResponse.json({ ok: true, resolved: result.resolved });
+  const now = new Date();
+  const turnsSwept = await sweepDueDeadlines(now);
+  const challengesSwept = await sweepDueChallengeWindows(now);
+  return NextResponse.json({
+    ok: true,
+    resolved: turnsSwept.resolved,
+    challengeWindowsClosed: challengesSwept.resolved,
+  });
 }

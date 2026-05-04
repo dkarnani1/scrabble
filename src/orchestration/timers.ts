@@ -8,8 +8,13 @@
 
 import { commitAction, loadGameStateForCaller } from './game-engine';
 import { getGameById } from '@persistence/games.repo';
+import { listMoves } from '@persistence/moves.repo';
 import { listPlayers } from '@persistence/players.repo';
+import { nextDeadline } from './transitions';
 import type { GameState } from '@rules/types';
+
+/** Challenge windows are exactly 3 seconds long, per FR-040 / data-model.md. */
+export const CHALLENGE_WINDOW_MS = 3_000 as const;
 
 export function remainingMs(state: Pick<GameState, 'turnDeadlineAt'>, now: Date): number | null {
   if (!state.turnDeadlineAt) return null;
@@ -79,6 +84,62 @@ export async function sweepDueDeadlines(now: Date): Promise<{ resolved: string[]
   for (const id of ids) {
     const result = await resolveIfExpired(id, now);
     if (result.kind === 'forced-pass') resolved.push(id);
+  }
+  return { resolved };
+}
+
+export type ChallengeWindowResolveResult =
+  | { kind: 'no-op' }
+  | { kind: 'window-closed'; gameId: string };
+
+/** Idempotent: if `gameId` is in `challenge-window` phase and the latest place move's
+ * created_at + CHALLENGE_WINDOW_MS has passed, transition phase to 'playing' and reset
+ * the turn deadline. Safe to call from every action and from the cron sweep. */
+export async function resolveChallengeWindowIfExpired(
+  gameId: string,
+  now: Date,
+): Promise<ChallengeWindowResolveResult> {
+  const game = await getGameById(gameId);
+  if (!game) return { kind: 'no-op' };
+  if (game.phase !== 'challenge-window') return { kind: 'no-op' };
+
+  const moves = await listMoves(gameId);
+  const lastMove = moves.at(-1);
+  if (!lastMove) return { kind: 'no-op' };
+  const lastCreated = new Date(lastMove.created_at).getTime();
+  if (now.getTime() < lastCreated + CHALLENGE_WINDOW_MS) return { kind: 'no-op' };
+
+  const { getSupabaseAdminClient } = await import('@persistence/supabase-admin');
+  const sb = getSupabaseAdminClient();
+  const newDeadline = nextDeadline(now, game.timer_setting);
+  const { error } = await sb
+    .from('games')
+    .update({
+      phase: 'playing',
+      pending_challenge: null,
+      turn_started_at: now.toISOString(),
+      turn_deadline_at: newDeadline ? newDeadline.toISOString() : null,
+    })
+    .eq('id', gameId)
+    .eq('phase', 'challenge-window');
+  if (error) throw error;
+  return { kind: 'window-closed', gameId };
+}
+
+/** Bulk sweep for expired challenge windows. */
+export async function sweepDueChallengeWindows(now: Date): Promise<{ resolved: string[] }> {
+  const { getSupabaseAdminClient } = await import('@persistence/supabase-admin');
+  const sb = getSupabaseAdminClient();
+  // Find games still in challenge-window phase. We could narrow this with a
+  // generated column in Postgres, but for v1 the count of in-flight games is small
+  // and the per-row check below handles 3-second precision.
+  const { data, error } = await sb.from('games').select('id').eq('phase', 'challenge-window');
+  if (error) throw error;
+  const ids = ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
+  const resolved: string[] = [];
+  for (const id of ids) {
+    const result = await resolveChallengeWindowIfExpired(id, now);
+    if (result.kind === 'window-closed') resolved.push(id);
   }
   return { resolved };
 }

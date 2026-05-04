@@ -19,12 +19,12 @@ export function TileChip({ tile, selected, disabled, onClick, size = 'md' }: Til
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex flex-col items-center justify-center rounded-md border border-tile-edge bg-tile-face shadow-sm transition',
-        size === 'sm' ? 'h-9 w-9 text-sm' : 'h-12 w-12 text-base',
-        selected && 'ring-2 ring-tile-edge translate-y-[-2px]',
+        'flex flex-col items-center justify-center rounded-md border border-tile-edge bg-tile-face shadow-sm transition-[transform,box-shadow] duration-150 ease-out',
+        size === 'sm' ? 'h-9 w-9 text-sm' : 'h-11 w-11 text-base sm:h-12 sm:w-12',
+        selected && 'ring-2 ring-tile-edge -translate-y-1 shadow-md',
         disabled && 'opacity-40',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tile-edge',
-        'hover:translate-y-[-1px]',
+        'hover:-translate-y-0.5 hover:shadow',
       )}
     >
       <span className="font-semibold text-tile-ink">{letterFor(tile)}</span>
