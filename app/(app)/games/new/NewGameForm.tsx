@@ -47,8 +47,10 @@ export function NewGameForm() {
             return (
               <label
                 key={opt.value}
-                className={`flex cursor-pointer flex-col rounded-md border p-3 transition ${
-                  active ? 'border-tile-edge bg-tile-edge/10' : 'border-board-line bg-board-base/40'
+                className={`flex cursor-pointer flex-col rounded-md border-2 p-3 transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-tile-edge has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-board-base ${
+                  active
+                    ? 'border-tile-edge bg-tile-edge text-board-base shadow-md'
+                    : 'border-board-line bg-board-base/40 hover:border-tile-edge/60 hover:bg-board-base/70'
                 }`}
               >
                 <input
@@ -60,7 +62,9 @@ export function NewGameForm() {
                   onChange={() => setTimer(opt.value)}
                 />
                 <span className="font-medium">{opt.label}</span>
-                <span className="text-xs text-tile-ink/70">{opt.hint}</span>
+                <span className={`text-xs ${active ? 'text-board-base/85' : 'text-tile-ink/70'}`}>
+                  {opt.hint}
+                </span>
               </label>
             );
           })}
