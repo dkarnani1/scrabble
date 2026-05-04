@@ -225,7 +225,8 @@ function translateEngineError(
   if (e.reason === 'exchange-bag-too-small') {
     return { code: 'rule-violation', reason: 'exchange-bag-too-small' };
   }
-  // word-not-in-dictionary is a P5 / challenge-resolution path; fall back to a
-  // generic rule-violation for now so Phase 4 ships.
-  return { code: 'rule-violation', reason: 'word-shorter-than-two' };
+  if (e.reason === 'word-not-in-dictionary') {
+    return { code: 'rule-violation', reason: 'word-not-in-dictionary' };
+  }
+  return { code: 'internal-error', message: `Unhandled rule-violation: ${e.reason}` };
 }

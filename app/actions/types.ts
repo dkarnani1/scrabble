@@ -30,7 +30,8 @@ export type ActionError =
         | 'blank-not-assigned'
         | 'square-already-occupied'
         | 'exchange-bag-too-small'
-        | 'word-shorter-than-two';
+        | 'word-shorter-than-two'
+        | 'word-not-in-dictionary';
     }
   | {
       code: 'state-conflict';
