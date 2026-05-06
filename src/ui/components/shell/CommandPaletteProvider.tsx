@@ -13,8 +13,6 @@ const CommandPaletteContext = React.createContext<CommandPaletteApi | null>(null
 type RegistryApi = {
   register: (id: string, commands: ReadonlyArray<CommandEntry>) => void;
   unregister: (id: string) => void;
-  /** Snapshot of all registered command sources, flattened by source order. */
-  all: ReadonlyArray<CommandEntry>;
 };
 
 const RegistryContext = React.createContext<RegistryApi | null>(null);
@@ -93,9 +91,14 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
   }, []);
 
   const paletteApi = React.useMemo<CommandPaletteApi>(() => ({ open, setOpen }), [open]);
+  // Keep `all` out of the context value: consumers only need the stable
+  // register/unregister functions. Including `all` here would change the
+  // context identity on every registration, re-firing every consumer's
+  // useRegisterCommands effect (cleanup → re-register), which causes an
+  // infinite update loop (React error #185).
   const registryApi = React.useMemo<RegistryApi>(
-    () => ({ register, unregister, all }),
-    [register, unregister, all],
+    () => ({ register, unregister }),
+    [register, unregister],
   );
 
   return (
