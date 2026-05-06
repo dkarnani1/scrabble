@@ -32,26 +32,26 @@ export function ChallengeWindow({
   pending,
   onChallenge,
 }: ChallengeWindowProps) {
-  // Compute how much wall time has passed locally since the GameView was loaded; add
-  // that to the server clock to estimate the current server-time. Then the window is
-  // (placedAt + WINDOW_MS) - serverNowEstimate.
+  // Re-anchor skew (server clock − local clock) every time `serverNow` arrives.
+  // Using a per-instance ref instead of a module-level cache prevents the anchor
+  // from drifting as periodic refetches advance serverNow while the original
+  // mount time stays frozen — which would push the estimated server time into
+  // the future and make the window appear already expired.
+  const skewRef = React.useRef(0);
+  React.useEffect(() => {
+    skewRef.current = new Date(serverNow).getTime() - Date.now();
+  }, [serverNow]);
+
   const [tickMs, setTickMs] = React.useState(() => Date.now());
   React.useEffect(() => {
     const id = window.setInterval(() => setTickMs(Date.now()), 100);
     return () => window.clearInterval(id);
   }, []);
 
-  const skewMs = React.useMemo(() => {
-    // serverNow when the page rendered + (now - mount) ≈ current server time.
-    const serverAtMount = new Date(serverNow).getTime();
-    const localAtMount = mountTime();
-    return serverAtMount - localAtMount;
-  }, [serverNow]);
-
   const placedMs = new Date(placedAt).getTime();
-  const serverEstimate = tickMs + skewMs;
+  const serverEstimate = tickMs + skewRef.current;
   const elapsed = serverEstimate - placedMs;
-  const remainingMs = Math.max(0, WINDOW_MS - elapsed);
+  const remainingMs = Number.isFinite(elapsed) ? Math.max(0, WINDOW_MS - elapsed) : WINDOW_MS;
   const fraction = Math.max(0, Math.min(1, remainingMs / WINDOW_MS));
 
   return (
@@ -111,10 +111,4 @@ export function ChallengeWindow({
       )}
     </div>
   );
-}
-
-let _mount: number | null = null;
-function mountTime(): number {
-  if (_mount === null) _mount = Date.now();
-  return _mount;
 }
