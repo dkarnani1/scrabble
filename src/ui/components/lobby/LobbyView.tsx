@@ -6,6 +6,7 @@ import { InviteCodeBox } from './InviteCodeBox';
 import { startGame, leaveLobby } from '@/app/actions/games';
 import { setDisplayName } from '@/app/actions/profile';
 import { useRouter } from 'next/navigation';
+import { subscribeToGame } from '@realtime/game-channel';
 
 export type LobbyPlayer = {
   slot: 0 | 1 | 2 | 3;
@@ -40,6 +41,32 @@ export function LobbyView({
   const [error, setError] = React.useState<string | null>(null);
 
   const lobbyFull = players.length >= 2;
+
+  // Realtime: re-fetch the server-rendered lobby whenever a player joins/leaves
+  // or the game phase changes (so guests are auto-routed to /play when the host
+  // starts). The page itself handles all redirect logic — we just kick a refresh.
+  React.useEffect(() => {
+    let cancelled = false;
+    const unsubscribe = subscribeToGame({
+      gameId,
+      onChange: () => {
+        if (!cancelled) router.refresh();
+      },
+      onStatusChange: (status) => {
+        if (status === 'subscribed' && !cancelled) router.refresh();
+      },
+    });
+    // Polling backstop in case the websocket drops or RLS filters an event we
+    // expected. Cheap on this page — the lobby payload is small.
+    const interval = window.setInterval(() => {
+      if (!cancelled) router.refresh();
+    }, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      void unsubscribe();
+    };
+  }, [gameId, router]);
 
   function onStart() {
     setError(null);
