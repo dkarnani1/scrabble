@@ -76,7 +76,7 @@
       "prettier --write",
       "eslint --fix"
     ],
-    "*.{json,md,css,sql}": [
+    "*.{json,md,css}": [
       "prettier --write"
     ]
   }
