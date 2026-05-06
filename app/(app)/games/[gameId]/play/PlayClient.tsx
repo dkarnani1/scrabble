@@ -71,6 +71,12 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   const [view, setView] = React.useState<GameView>(initialView);
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  // Separate pending state for the challenge action. The shared transition
+  // can stay "in progress" forever under high-frequency polling because the
+  // 500ms refetches preempt low-priority transition commits, leaving the
+  // Challenge button stuck on "Challenging…". Tracking it locally keeps the
+  // button responsive regardless of background refetches.
+  const [challengePending, setChallengePending] = React.useState(false);
   const [exchangeOpen, setExchangeOpen] = React.useState(false);
   const [blankPickerForRackIndex, setBlankPickerForRackIndex] = React.useState<number | null>(null);
   const [selectedRackIndex, setSelectedRackIndex] = React.useState<number | null>(null);
@@ -327,18 +333,27 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
 
   const onChallenge = () => {
     if (!lastMove || lastMove.move.kind !== 'place') return;
+    if (challengePending) return;
     setError(null);
-    startTransition(async () => {
-      const result = await raiseChallenge({
-        gameId: view.id,
-        moveSeq: lastMove.move.seq,
-      });
-      if (!result.ok) {
+    setChallengePending(true);
+    void (async () => {
+      try {
+        const result = await raiseChallenge({
+          gameId: view.id,
+          moveSeq: lastMove.move.seq,
+        });
+        if (!result.ok) {
+          setError('Challenge could not be raised.');
+          return;
+        }
+        setView(result.data);
+      } catch (e) {
+        console.error('raiseChallenge failed', e);
         setError('Challenge could not be raised.');
-        return;
+      } finally {
+        setChallengePending(false);
       }
-      setView(result.data);
-    });
+    })();
   };
 
   const onExchange = (indices: number[]) => {
@@ -619,7 +634,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
               placedAt={placedAt}
               serverNow={view.serverNow}
               canChallenge={canChallenge}
-              pending={pending}
+              pending={challengePending}
               onChallenge={onChallenge}
             />
           )}
