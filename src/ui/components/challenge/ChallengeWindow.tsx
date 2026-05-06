@@ -11,7 +11,11 @@ import * as React from 'react';
 import { Button } from '@ui/components/primitives';
 import { cn } from '@ui/lib/classnames';
 
-const WINDOW_MS = 3_000;
+// Must match CHALLENGE_WINDOW_MS in src/orchestration/timers.ts. The spec
+// promises 3 seconds of clickable challenge time; we hold the window open for
+// 5s server-side to absorb realtime + refetch latency, and the visible
+// countdown reflects the actual remaining time.
+const WINDOW_MS = 5_000;
 
 export type ChallengeWindowProps = {
   /** ISO timestamp the place move was committed at — the window starts here. */
@@ -92,7 +96,7 @@ export function ChallengeWindow({
         <p className="text-xs text-tile-ink/70">
           {canChallenge
             ? 'Tap Challenge to dispute the played words.'
-            : 'Opponent has 3 seconds to challenge.'}
+            : 'Opponent has a few seconds to challenge.'}
         </p>
       </div>
       {canChallenge && (

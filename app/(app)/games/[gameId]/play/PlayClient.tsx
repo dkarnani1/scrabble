@@ -121,11 +121,13 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
 
   // Polling backstop. The realtime channel above SHOULD deliver opponent moves
   // and phase transitions instantly, but websocket drops + RLS-filtered UPDATE
-  // events can leave the view stale until the user manually refreshes. A cheap
-  // 2s tick guarantees the screen catches up even when realtime goes silent.
+  // events can leave the view stale until the user manually refreshes. The
+  // interval is faster during challenge-window (the opponent has a small
+  // budget to react) and otherwise paced to keep DB load reasonable.
   React.useEffect(() => {
     if (view.phase === 'completed' || view.phase === 'abandoned') return;
-    const id = window.setInterval(refetch, 2000);
+    const intervalMs = view.phase === 'challenge-window' ? 500 : 1500;
+    const id = window.setInterval(refetch, intervalMs);
     return () => window.clearInterval(id);
   }, [refetch, view.phase]);
 
