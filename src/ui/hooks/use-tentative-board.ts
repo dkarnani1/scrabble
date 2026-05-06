@@ -86,13 +86,22 @@ export function useTentativeBoard({ rack }: UseTentativeBoardArgs): TentativeApi
 
   const shuffleRack = React.useCallback(() => {
     setSlots((prev) => {
-      const onRack = prev.filter((s) => s.placedAt === null);
-      const placed = prev.filter((s) => s.placedAt !== null);
-      const shuffled = onRack
-        .map((s) => ({ s, k: Math.random() }))
-        .sort((a, b) => a.k - b.k)
-        .map(({ s }) => s);
-      return [...placed, ...shuffled].sort((a, b) => a.rackIndex - b.rackIndex);
+      // Shuffle only the on-rack slots, preserving placed slots in their
+      // original array positions so the rack still shows gaps where tiles
+      // were dragged onto the board. Fisher-Yates over the indices that
+      // currently hold an on-rack tile.
+      const onRackPositions: number[] = [];
+      prev.forEach((s, i) => {
+        if (s.placedAt === null) onRackPositions.push(i);
+      });
+      const next = prev.slice();
+      for (let k = onRackPositions.length - 1; k > 0; k--) {
+        const j = Math.floor(Math.random() * (k + 1));
+        const a = onRackPositions[k]!;
+        const b = onRackPositions[j]!;
+        [next[a], next[b]] = [next[b]!, next[a]!];
+      }
+      return next;
     });
   }, []);
 
