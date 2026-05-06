@@ -75,6 +75,7 @@ export default async function LobbyPage({ params }: { params: Promise<{ gameId: 
           inviteUrl={inviteUrl}
           players={players}
           amHost={me.is_host}
+          myUserId={user.id}
           timerSetting={game.timer_setting}
           dictionaryId={game.dictionary_id}
         />

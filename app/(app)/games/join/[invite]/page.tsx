@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@ui/components/shell/AppShell';
+import { DisplayNamePrompt } from '@ui/components/auth/DisplayNamePrompt';
 import { getCurrentUser } from '@auth/server';
 import { findInviteByCode } from '@persistence/invites.repo';
 import { findPlayerByUser } from '@persistence/players.repo';
+import { getProfile } from '@persistence/profiles.repo';
 import { JoinForm } from './JoinForm';
 
 export const dynamic = 'force-dynamic';
@@ -37,6 +39,28 @@ export default async function JoinPage({ params }: { params: Promise<{ invite: s
   const existing = await findPlayerByUser(inviteRow.game_id, user.id);
   if (existing) {
     redirect(`/games/${inviteRow.game_id}/lobby`);
+  }
+
+  // Invitees often arrive without a profile (sign-in flow skips the home-page
+  // display-name step on its way back here). Without a name, they'd join the lobby
+  // as "Unknown" and the host would see that. Force a name first.
+  const profile = await getProfile(user.id);
+  if (!profile?.display_name) {
+    return (
+      <AppShell>
+        <section className="mx-auto max-w-md space-y-4 py-8">
+          <header className="text-center">
+            <h1 className="text-2xl font-semibold">Pick a display name</h1>
+            <p className="mt-2 text-sm text-tile-ink/70">
+              Your opponent will see this name. You can change it later.
+            </p>
+          </header>
+          <div className="flex justify-center">
+            <DisplayNamePrompt redirectTo={`/games/join/${encodeURIComponent(invite)}`} />
+          </div>
+        </section>
+      </AppShell>
+    );
   }
 
   if (inviteRow.consumed_at) {

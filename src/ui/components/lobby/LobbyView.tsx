@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Button } from '@ui/components/primitives';
+import { Button, Input } from '@ui/components/primitives';
 import { InviteCodeBox } from './InviteCodeBox';
 import { startGame, leaveLobby } from '@/app/actions/games';
+import { setDisplayName } from '@/app/actions/profile';
 import { useRouter } from 'next/navigation';
 
 export type LobbyPlayer = {
@@ -19,6 +20,7 @@ export type LobbyViewProps = {
   inviteUrl: string | null;
   players: LobbyPlayer[];
   amHost: boolean;
+  myUserId: string;
   timerSetting: 'none' | '30s' | '1m' | '2m';
   dictionaryId: string;
 };
@@ -29,6 +31,7 @@ export function LobbyView({
   inviteUrl,
   players,
   amHost,
+  myUserId,
   timerSetting,
   dictionaryId,
 }: LobbyViewProps) {
@@ -80,16 +83,20 @@ export function LobbyView({
             .map((p) => (
               <li
                 key={p.userId}
-                className="flex items-center justify-between rounded-md border border-board-line bg-board-base/60 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-md border border-board-line bg-board-base/60 px-4 py-3"
               >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-tile-edge text-xs font-semibold text-tile-face">
+                <div className="flex flex-1 items-center gap-3 min-w-0">
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tile-edge text-xs font-semibold text-tile-face">
                     {p.slot + 1}
                   </span>
-                  <span className="font-medium">{p.displayName}</span>
+                  {p.userId === myUserId ? (
+                    <DisplayNameField currentName={p.displayName} />
+                  ) : (
+                    <span className="font-medium truncate">{p.displayName}</span>
+                  )}
                 </div>
                 {p.isHost && (
-                  <span className="rounded-full bg-board-line px-2 py-0.5 text-xs font-medium text-tile-ink">
+                  <span className="shrink-0 rounded-full bg-board-line px-2 py-0.5 text-xs font-medium text-tile-ink">
                     host
                   </span>
                 )}
@@ -124,6 +131,101 @@ export function LobbyView({
 
       {amHost && inviteCode && inviteUrl && !lobbyFull && (
         <InviteCodeBox inviteCode={inviteCode} inviteUrl={inviteUrl} />
+      )}
+    </div>
+  );
+}
+
+function DisplayNameField({ currentName }: { currentName: string }) {
+  const router = useRouter();
+  const [editing, setEditing] = React.useState(false);
+  const [value, setValue] = React.useState(currentName);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isPending, startTransition] = React.useTransition();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  function onCancel() {
+    setEditing(false);
+    setError(null);
+    setValue(currentName);
+  }
+
+  function onSave() {
+    const next = value.trim();
+    if (next === currentName) {
+      onCancel();
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await setDisplayName({ displayName: next });
+      if (!result.ok) {
+        if (result.error.code === 'invalid-input') {
+          setError(result.error.issues[0]?.message ?? 'Invalid display name.');
+        } else {
+          setError('Could not save display name.');
+        }
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    });
+  }
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="font-medium truncate">{currentName}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setValue(currentName);
+            setEditing(true);
+          }}
+          className="text-xs text-tile-edge underline shrink-0"
+        >
+          Edit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col gap-1 min-w-0">
+      <div className="flex items-center gap-2">
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onSave();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              onCancel();
+            }
+          }}
+          minLength={2}
+          maxLength={32}
+          aria-label="Display name"
+          className="h-8 text-sm"
+        />
+        <Button size="sm" onClick={onSave} disabled={isPending || value.trim().length < 2}>
+          {isPending ? 'Saving…' : 'Save'}
+        </Button>
+        <Button size="sm" variant="outline" onClick={onCancel} disabled={isPending}>
+          Cancel
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="text-xs text-premium-tw">
+          {error}
+        </p>
       )}
     </div>
   );
