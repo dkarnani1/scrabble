@@ -70,12 +70,12 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   const showLegacyHud = searchParams?.get('legacy') === '1';
   const [view, setView] = React.useState<GameView>(initialView);
   const [error, setError] = React.useState<string | null>(null);
-  const [pending, startTransition] = React.useTransition();
-  // Separate pending state for the challenge action. The shared transition
-  // can stay "in progress" forever under high-frequency polling because the
-  // 500ms refetches preempt low-priority transition commits, leaving the
-  // Challenge button stuck on "Challenging…". Tracking it locally keeps the
-  // button responsive regardless of background refetches.
+  // Manual pending flags instead of useTransition. Polling fires urgent
+  // setView every 500–1500ms, which preempts the low-priority transition
+  // commit and leaves `pending` latched true — disabling the rack and
+  // action buttons mid-turn until something unrelated forces a commit.
+  // Plain useState updates are urgent priority and clear deterministically.
+  const [pending, setPending] = React.useState(false);
   const [challengePending, setChallengePending] = React.useState(false);
   const [exchangeOpen, setExchangeOpen] = React.useState(false);
   const [blankPickerForRackIndex, setBlankPickerForRackIndex] = React.useState<number | null>(null);
@@ -288,47 +288,66 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   };
 
   const onSubmit = () => {
+    if (pending) return;
     setError(null);
     if (tentative.pendingPlacements.length === 0) {
       setError('Place at least one tile before submitting.');
       return;
     }
     const placedCount = tentative.pendingPlacements.length;
-    startTransition(async () => {
-      const result = await placeMove({
-        gameId: view.id,
-        tiles: tentative.pendingPlacements,
-      });
-      if (!result.ok) {
-        playCommitInvalid();
-        if (result.error.code === 'rule-violation') setError(reasonToMessage(result.error.reason));
-        else if (result.error.code === 'state-conflict')
-          setError(reasonToMessage(result.error.reason));
-        else if (result.error.code === 'invalid-input')
-          setError(result.error.issues[0]?.message ?? 'Invalid move.');
-        else setError('Move rejected.');
-        return;
+    setPending(true);
+    void (async () => {
+      try {
+        const result = await placeMove({
+          gameId: view.id,
+          tiles: tentative.pendingPlacements,
+        });
+        if (!result.ok) {
+          playCommitInvalid();
+          if (result.error.code === 'rule-violation')
+            setError(reasonToMessage(result.error.reason));
+          else if (result.error.code === 'state-conflict')
+            setError(reasonToMessage(result.error.reason));
+          else if (result.error.code === 'invalid-input')
+            setError(result.error.issues[0]?.message ?? 'Invalid move.');
+          else setError('Move rejected.');
+          return;
+        }
+        // Bingo plays *instead* of commit-success when all 7 rack tiles were used.
+        // We use the local placement count rather than reading the freshly committed
+        // server move to keep the play instantaneous; the server flag (`isBingo`) is
+        // confirmed in the next render via the history entry.
+        if (placedCount === 7) playBingo();
+        else playCommitSuccess();
+        setView(result.data);
+      } catch (e) {
+        console.error('placeMove failed', e);
+        setError('Move rejected.');
+      } finally {
+        setPending(false);
       }
-      // Bingo plays *instead* of commit-success when all 7 rack tiles were used.
-      // We use the local placement count rather than reading the freshly committed
-      // server move to keep the play instantaneous; the server flag (`isBingo`) is
-      // confirmed in the next render via the history entry.
-      if (placedCount === 7) playBingo();
-      else playCommitSuccess();
-      setView(result.data);
-    });
+    })();
   };
 
   const onPass = () => {
+    if (pending) return;
     setError(null);
-    startTransition(async () => {
-      const result = await passTurn({ gameId: view.id });
-      if (!result.ok) {
+    setPending(true);
+    void (async () => {
+      try {
+        const result = await passTurn({ gameId: view.id });
+        if (!result.ok) {
+          setError('Pass rejected.');
+          return;
+        }
+        setView(result.data);
+      } catch (e) {
+        console.error('passTurn failed', e);
         setError('Pass rejected.');
-        return;
+      } finally {
+        setPending(false);
       }
-      setView(result.data);
-    });
+    })();
   };
 
   const onChallenge = () => {
@@ -357,16 +376,25 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   };
 
   const onExchange = (indices: number[]) => {
+    if (pending) return;
     setError(null);
-    startTransition(async () => {
-      const result = await exchangeTiles({ gameId: view.id, tileIndices: indices });
-      if (!result.ok) {
+    setPending(true);
+    void (async () => {
+      try {
+        const result = await exchangeTiles({ gameId: view.id, tileIndices: indices });
+        if (!result.ok) {
+          setError('Exchange rejected.');
+          return;
+        }
+        setExchangeOpen(false);
+        setView(result.data);
+      } catch (e) {
+        console.error('exchangeTiles failed', e);
         setError('Exchange rejected.');
-        return;
+      } finally {
+        setPending(false);
       }
-      setExchangeOpen(false);
-      setView(result.data);
-    });
+    })();
   };
 
   const displayNameBySlot: Partial<Record<PlayerSlot, string>> = {};
