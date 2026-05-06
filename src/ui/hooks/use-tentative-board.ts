@@ -35,15 +35,29 @@ export type TentativeApi = {
 };
 
 export function useTentativeBoard({ rack }: UseTentativeBoardArgs): TentativeApi {
+  // Identify the rack by content, not array identity. Periodic refetches hand
+  // back a fresh array reference even when the letters haven't changed; using
+  // the array as a dep would wipe in-progress tentative placements every tick.
+  const rackKey = React.useMemo(
+    () => rack.map((t) => (t.kind === 'letter' ? t.letter : `?${t.assigned ?? '_'}`)).join(','),
+    [rack],
+  );
+
+  const rackRef = React.useRef(rack);
+  rackRef.current = rack;
+
+  // rackKey captures rack identity by content; rebuilding only when contents
+  // change preserves placements across no-op refetches that hand in a fresh
+  // array reference with the same letters.
   const initial = React.useMemo<RackTileSlot[]>(
     () =>
-      rack.map((tile, rackIndex) => ({
+      rackRef.current.map((tile, rackIndex) => ({
         tile,
         rackIndex,
         placedAt: null,
         assignedLetter: tile.kind === 'blank' ? tile.assigned : null,
       })),
-    [rack],
+    [rackKey],
   );
 
   const [slots, setSlots] = React.useState<RackTileSlot[]>(initial);
