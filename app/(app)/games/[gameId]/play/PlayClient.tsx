@@ -112,12 +112,34 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
   // see "Terminal phase sound" further down in this file.
   const prevPhaseRef = React.useRef(view.phase);
 
+  // Apply a freshly-fetched view only if it isn't an older snapshot than
+  // what we already have. Polling fires every 500–1500ms, so an in-flight
+  // refetch started before a local commit can return after the commit and
+  // would otherwise overwrite the post-commit board with the pre-commit
+  // one — giving "square already occupied" errors on what the user sees
+  // as an empty square. Action handlers that produce a fresh view also
+  // route through this so their snapshots can't regress past a polling
+  // response that arrived first.
+  const applyView = React.useCallback((next: GameView) => {
+    setView((cur) => {
+      if (next.history.length < cur.history.length) return cur;
+      if (next.history.length === cur.history.length) {
+        const nextTs = new Date(next.serverNow).getTime();
+        const curTs = new Date(cur.serverNow).getTime();
+        if (Number.isFinite(nextTs) && Number.isFinite(curTs) && nextTs < curTs) {
+          return cur;
+        }
+      }
+      return next;
+    });
+  }, []);
+
   const refetch = React.useCallback(() => {
     void (async () => {
       const fresh = await getGameView({ gameId: view.id });
-      if (fresh.ok) setView(fresh.data);
+      if (fresh.ok) applyView(fresh.data);
     })();
-  }, [view.id]);
+  }, [view.id, applyView]);
 
   useGameChannel({
     gameId: view.id,
@@ -319,7 +341,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
         // confirmed in the next render via the history entry.
         if (placedCount === 7) playBingo();
         else playCommitSuccess();
-        setView(result.data);
+        applyView(result.data);
       } catch (e) {
         console.error('placeMove failed', e);
         setError('Move rejected.');
@@ -340,7 +362,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
           setError('Pass rejected.');
           return;
         }
-        setView(result.data);
+        applyView(result.data);
       } catch (e) {
         console.error('passTurn failed', e);
         setError('Pass rejected.');
@@ -365,7 +387,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
           setError('Challenge could not be raised.');
           return;
         }
-        setView(result.data);
+        applyView(result.data);
       } catch (e) {
         console.error('raiseChallenge failed', e);
         setError('Challenge could not be raised.');
@@ -387,7 +409,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
           return;
         }
         setExchangeOpen(false);
-        setView(result.data);
+        applyView(result.data);
       } catch (e) {
         console.error('exchangeTiles failed', e);
         setError('Exchange rejected.');
