@@ -2,6 +2,12 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AppShell } from '@ui/components/shell/AppShell';
 import { EndgameBanner } from '@ui/components/feedback/EndgameBanner';
+import { EndgameOverlayMount } from '@ui/components/result/EndgameOverlayMount';
+import {
+  derivePlayerSummary,
+  outcomeFor,
+  reasonLabel,
+} from '@ui/components/result/endgame-summary';
 import { RematchButton } from '@ui/components/result/RematchButton';
 import { MoveHistoryList } from '@ui/components/moves/MoveHistoryList';
 import { getCurrentUser } from '@auth/server';
@@ -10,8 +16,17 @@ import type { PlayerSlot } from '@rules/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ResultPage({ params }: { params: Promise<{ gameId: string }> }) {
+export default async function ResultPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ legacy?: string }>;
+}) {
   const { gameId } = await params;
+  const { legacy } = await searchParams;
+  const useLegacyBanner = legacy === '1';
+
   const user = await getCurrentUser();
   if (!user) redirect(`/sign-in?next=/games/${gameId}/result`);
 
@@ -50,6 +65,29 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
 
   const sortedPlayers = view.players.slice().sort((a, b) => b.score - a.score);
 
+  // Build the overlay summary alongside the legacy banner data so the swap is
+  // a one-line difference.
+  const opponent = view.players.find((p) => p.userId !== user.id);
+  const overlay =
+    !useLegacyBanner && me && opponent
+      ? {
+          outcome: outcomeFor(view.result, mySlot),
+          reason: reasonLabel(view.result.endedReason),
+          you: derivePlayerSummary({
+            slot: me.slot as PlayerSlot,
+            name: me.displayName,
+            history: view.history,
+            result: view.result,
+          }),
+          opponent: derivePlayerSummary({
+            slot: opponent.slot as PlayerSlot,
+            name: opponent.displayName,
+            history: view.history,
+            result: view.result,
+          }),
+        }
+      : null;
+
   return (
     <AppShell>
       <div className="grid gap-6 py-4 md:grid-cols-[minmax(0,1fr)_320px]">
@@ -58,11 +96,13 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
             ← Back to your games
           </Link>
 
-          <EndgameBanner
-            result={view.result}
-            mySlot={mySlot}
-            displayNameBySlot={displayNameBySlot}
-          />
+          {useLegacyBanner && (
+            <EndgameBanner
+              result={view.result}
+              mySlot={mySlot}
+              displayNameBySlot={displayNameBySlot}
+            />
+          )}
 
           <section className="space-y-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-tile-edge">
@@ -93,6 +133,17 @@ export default async function ResultPage({ params }: { params: Promise<{ gameId:
           <MoveHistoryList history={view.history} displayNameBySlot={displayNameBySlot} />
         </aside>
       </div>
+
+      {overlay && (
+        <EndgameOverlayMount
+          gameId={view.id}
+          outcome={overlay.outcome}
+          reason={overlay.reason}
+          you={overlay.you}
+          opponent={overlay.opponent}
+          rematchSlot={<RematchButton priorGameId={view.id} amHost={amHost} />}
+        />
+      )}
     </AppShell>
   );
 }

@@ -1,67 +1,48 @@
 'use client';
 
-import * as React from 'react';
-import { cn } from '@ui/lib/classnames';
+// Sonner-backed implementation of the toast primitive. The actual <Toaster /> is
+// mounted once in app/layout.tsx; ToastProvider is preserved as a passthrough so
+// existing call sites that wrap subtrees in <ToastProvider> keep working without
+// any change. useToast() returns the same { push } shape as before.
 
-// Tiny toast primitive. shadcn-CLI-installed Toast typically depends on Radix;
-// this version keeps the dependency footprint at zero for the foundational phase.
-// Phase 4 (US2) will revisit if the design requires the full primitive.
+import * as React from 'react';
+import { toast as sonnerToast } from 'sonner';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'error';
 
-type ToastEntry = {
-  id: string;
+type ToastInput = {
   title: string;
   description?: string;
-  tone: ToastTone;
+  tone?: ToastTone;
 };
 
 type ToastApi = {
-  push: (toast: Omit<ToastEntry, 'id'>) => void;
+  push: (toast: ToastInput) => void;
 };
 
-const ToastContext = React.createContext<ToastApi | null>(null);
+const TOAST_API: ToastApi = {
+  push: ({ title, description, tone = 'info' }) => {
+    const opts = description ? { description } : undefined;
+    switch (tone) {
+      case 'success':
+        sonnerToast.success(title, opts);
+        return;
+      case 'warning':
+        sonnerToast.warning(title, opts);
+        return;
+      case 'error':
+        sonnerToast.error(title, opts);
+        return;
+      default:
+        sonnerToast.info(title, opts);
+    }
+  },
+};
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = React.useState<ToastEntry[]>([]);
-
-  const push = React.useCallback((toast: Omit<ToastEntry, 'id'>) => {
-    const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, ...toast }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  }, []);
-
-  const api = React.useMemo<ToastApi>(() => ({ push }), [push]);
-
-  return (
-    <ToastContext.Provider value={api}>
-      {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-80 flex-col gap-2">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            role="status"
-            className={cn(
-              'pointer-events-auto rounded-md border p-3 shadow-md',
-              t.tone === 'success' && 'border-green-300 bg-green-50 text-green-900',
-              t.tone === 'warning' && 'border-amber-300 bg-amber-50 text-amber-900',
-              t.tone === 'error' && 'border-red-300 bg-red-50 text-red-900',
-              (t.tone === 'info' || !t.tone) && 'border-board-line bg-board-base text-tile-ink',
-            )}
-          >
-            <div className="text-sm font-semibold">{t.title}</div>
-            {t.description && <div className="mt-0.5 text-sm">{t.description}</div>}
-          </div>
-        ))}
-      </div>
-    </ToastContext.Provider>
-  );
+  return <>{children}</>;
 }
 
 export function useToast(): ToastApi {
-  const ctx = React.useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be called inside <ToastProvider>.');
-  return ctx;
+  return TOAST_API;
 }

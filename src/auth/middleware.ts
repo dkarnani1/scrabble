@@ -37,6 +37,18 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const path = request.nextUrl.pathname;
   if (isPublic(path)) return response;
 
+  // Dev-only escape hatch: /home?demo=1 (or ?demo=empty) renders the home bento
+  // against mock data so designers / screenshot scripts don't need a real
+  // Supabase session. Production builds short-circuit before this branch.
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    path === '/home' &&
+    (request.nextUrl.searchParams.get('demo') === '1' ||
+      request.nextUrl.searchParams.get('demo') === 'empty')
+  ) {
+    return response;
+  }
+
   if (!data.user) {
     const signInUrl = request.nextUrl.clone();
     signInUrl.pathname = '/sign-in';
@@ -49,5 +61,9 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
 function isPublic(path: string): boolean {
   if (PUBLIC_EXACT.has(path)) return true;
+  // Dev-only demo routes (prefix `/demo-`) are public in non-prod so visual
+  // smoke-testing doesn't require an auth round-trip. Production builds gate
+  // these via `notFound()` inside the page itself.
+  if (process.env.NODE_ENV !== 'production' && path.startsWith('/demo-')) return true;
   return PUBLIC_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }

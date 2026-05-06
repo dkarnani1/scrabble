@@ -1,15 +1,47 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@ui/components/shell/AppShell';
 import { DisplayNamePrompt } from '@ui/components/auth/DisplayNamePrompt';
-import { InProgressList } from '@ui/components/home/InProgressList';
+import { HomeBento } from '@ui/components/lobby/HomeBento';
 import { getCurrentUser } from '@auth/server';
 import { getProfile } from '@persistence/profiles.repo';
 import { listMyGames } from '@/app/actions/games';
+import {
+  buildDemoHomeProps,
+  isDemoHomeAllowed,
+  type DemoMode,
+} from '@ui/components/lobby/home-demo-fixtures';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}) {
+  const params = await searchParams;
+  const demoMode: DemoMode | null =
+    isDemoHomeAllowed() && (params.demo === '1' || params.demo === 'empty')
+      ? params.demo === 'empty'
+        ? 'empty'
+        : 'populated'
+      : null;
+
+  // Dev-only escape hatch: render the bento with mock data so screenshots /
+  // local design iteration don't require a real authenticated session.
+  if (demoMode) {
+    const demoProps = buildDemoHomeProps(demoMode);
+    return (
+      <AppShell rightSlot={<span className="text-sm text-tile-ink/80">demo</span>}>
+        <section className="space-y-6 py-4">
+          {/* sr-only landmark heading so the page satisfies axe page-has-heading-one
+              without competing with the bento's visible "Pick up where you left off". */}
+          <h1 className="sr-only">Your games</h1>
+          <HomeBento {...demoProps} />
+        </section>
+      </AppShell>
+    );
+  }
+
   const user = await getCurrentUser();
   if (!user) redirect('/sign-in?next=/home');
 
@@ -35,27 +67,16 @@ export default async function HomePage() {
   return (
     <AppShell rightSlot={<span className="text-sm text-tile-ink/80">{profile.display_name}</span>}>
       <section className="space-y-6 py-4">
-        <header className="flex items-baseline justify-between">
-          <h1 className="text-2xl font-semibold">Your games</h1>
-          <Link
-            href="/games/new"
-            className="inline-flex items-center rounded-md bg-tile-edge px-4 py-2 text-sm font-medium text-tile-face transition hover:bg-tile-ink"
-          >
-            New game
-          </Link>
-        </header>
-
-        <InProgressList games={active} myUserId={user.id} />
-      </section>
-
-      <section className="mt-10 rounded-md border border-board-line bg-board-base/40 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-tile-edge">Settings</h2>
-        <p className="mt-1 text-sm text-tile-ink/80">
-          Display name: <strong>{profile.display_name}</strong>{' '}
-          <Link href="/profile" className="ml-2 text-xs text-tile-edge underline">
-            edit
-          </Link>
-        </p>
+        <h1 className="sr-only">Your games</h1>
+        <HomeBento
+          myUserId={user.id}
+          games={active}
+          // `recent` is documented as not yet wired in `listMyGames` (returns [])
+          // and stats aren't computed server-side. Pass null so the tiles render
+          // the "Coming soon" treatment until those queries land.
+          lastPlayed={null}
+          stats={null}
+        />
       </section>
     </AppShell>
   );

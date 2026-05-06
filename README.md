@@ -9,6 +9,32 @@ This repository is **public**. No real secret values are committed. See
 `.env.example` for the full list of environment variables and use placeholder values
 during development.
 
+## Local development MCP setup
+
+This repo ships a project-scoped `.mcp.json` that wires three MCP servers into Claude
+Code: **shadcn** (registry browsing/install), **21st.dev Magic** (component generation),
+and **Playwright** (browser screenshots against the running dev server).
+
+The Magic MCP requires an API key. Get one from <https://21st.dev>, then export it in
+your shell **before launching Claude Code** so the spawned MCP process can read it:
+
+```powershell
+# PowerShell — current session
+$env:TWENTYFIRST_API_KEY = "your-key-here"
+
+# Persist across sessions (Windows User scope)
+[System.Environment]::SetEnvironmentVariable("TWENTYFIRST_API_KEY", "your-key-here", "User")
+```
+
+```bash
+# bash / zsh
+export TWENTYFIRST_API_KEY="your-key-here"
+```
+
+The other two servers need no configuration. After exporting the key, restart Claude Code
+and approve the project-scoped servers when prompted. `.mcp.json` is committed because
+the key is read from the environment, never hardcoded.
+
 ## Quick start
 
 Full instructions, including Supabase project setup, env wiring, migrations, dictionary

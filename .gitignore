@@ -12,6 +12,7 @@ out/
 playwright-report/
 test-results/
 coverage/
+.playwright-mcp/
 
 # Vercel local
 .vercel/

@@ -1,4 +1,13 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Tailwind v4 does not auto-load tailwind.config.ts — without this directive,
+   every token defined in `theme.extend` (board.*, tile.*, premium.*, the bevel
+   shadows, etc.) is silently inert. Keep the JS config the source of truth and
+   load it here. */
+@config "../tailwind.config.ts";
+
+@custom-variant dark (&:is(.dark *));
 
 @layer base {
   :root {
@@ -12,5 +21,110 @@
 
   body {
     font-family: var(--font-sans);
+    @apply bg-background text-foreground;
   }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+@layer utilities {
+  /* Subtle wood-grain texture for tile faces. Inline SVG = no extra HTTP request. */
+  .bg-wood-grain {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(255, 255, 255, 0) 35%,
+        rgba(0, 0, 0, 0.05) 100%
+      ),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.18  0 0 0 0.08 0'/></filter><rect width='80' height='80' filter='url(%23n)'/></svg>");
+    background-blend-mode: multiply, normal;
+    background-size:
+      cover,
+      80px 80px;
+  }
+  /* Felt texture under the board grid. */
+  .bg-felt-noise {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.36  0 0 0 0 0.22  0 0 0 0.06 0'/></filter><rect width='160' height='160' filter='url(%23f)'/></svg>");
+    background-size: 160px 160px;
+  }
+}
+
+/* shadcn theme contract — exposes the named tokens (--color-primary, etc.) that
+   shadcn primitives reference. The actual values live in :root below and are
+   mapped onto our Scrabble palette, NOT slate/zinc/neutral. */
+@theme inline {
+  --font-display: var(--font-display);
+  --font-heading: var(--font-display);
+  --font-sans: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Concrete values for the shadcn token contract, mapped onto our existing
+   palette in tailwind.config.ts (board.*, tile.*, premium.*). Update both
+   files together if a token shifts. */
+:root {
+  --background: #f5efe1; /* board.base — felt cream */
+  --foreground: #2c1f0e; /* tile.ink — deep brown */
+  --card: #f5efe1;
+  --card-foreground: #2c1f0e;
+  --popover: #f5efe1;
+  --popover-foreground: #2c1f0e;
+  --primary: #a07a3b; /* tile.edge — bronze brand accent */
+  --primary-foreground: #f5efe1;
+  --secondary: #d6cdb6; /* board.line */
+  --secondary-foreground: #2c1f0e;
+  --muted: #d6cdb6;
+  --muted-foreground: #2c1f0e;
+  --accent: #b88a4a; /* board.star */
+  --accent-foreground: #f5efe1;
+  --destructive: #b83f3f; /* premium.tw — triple-word red */
+  --border: #d6cdb6;
+  --input: #d6cdb6;
+  --ring: #a07a3b;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #1c160c;
+  --foreground: #f5efe1;
+  --card: #2c1f0e;
+  --card-foreground: #f5efe1;
+  --popover: #2c1f0e;
+  --popover-foreground: #f5efe1;
+  --primary: #a07a3b;
+  --primary-foreground: #f5efe1;
+  --secondary: #3a2c14;
+  --secondary-foreground: #f5efe1;
+  --muted: #3a2c14;
+  --muted-foreground: #d6cdb6;
+  --accent: #b88a4a;
+  --accent-foreground: #1c160c;
+  --destructive: #b83f3f;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #a07a3b;
 }
