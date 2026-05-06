@@ -68,7 +68,7 @@ export function applyMove(args: {
   /** Optional override for `now`. Used by deterministic tests; defaults to system time. */
   now?: () => Date;
 }): ApplyResult {
-  const { state, action, dictionary } = args;
+  const { state, action } = args;
   const bag = args.bag.slice();
   const nowIso = (args.now?.() ?? new Date()).toISOString();
 
@@ -94,15 +94,10 @@ export function applyMove(args: {
     }
 
     const score = scoreMove(state.board, action.tiles);
-    // Validate every word against the dictionary. (Challenges can later reverse a move
-    // that lands here despite an unknown word — but applyMove enforces the simpler
-    // invariant that placed words exist in the chosen dictionary.)
-    const allWords = [score.mainWord, ...score.crossWords];
-    for (const w of allWords) {
-      if (!dictionary.has(w.toUpperCase())) {
-        return { ok: false, error: { kind: 'rule-violation', reason: 'word-not-in-dictionary' } };
-      }
-    }
+    // Intentionally NOT dictionary-checking here. The challenge mechanic is the
+    // dictionary-enforcement path: placers may bluff with non-words, and the
+    // opponent's 3-second window is the only check. resolveChallenge does the
+    // lookup and reverses the move if the words aren't valid.
 
     // Mutate rack: consume placed tiles.
     const newRack = consumeTilesFromRack(

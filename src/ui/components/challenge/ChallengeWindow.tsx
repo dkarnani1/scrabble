@@ -32,15 +32,11 @@ export function ChallengeWindow({
   pending,
   onChallenge,
 }: ChallengeWindowProps) {
-  // Re-anchor skew (server clock − local clock) every time `serverNow` arrives.
-  // Using a per-instance ref instead of a module-level cache prevents the anchor
-  // from drifting as periodic refetches advance serverNow while the original
-  // mount time stays frozen — which would push the estimated server time into
-  // the future and make the window appear already expired.
-  const skewRef = React.useRef(0);
-  React.useEffect(() => {
-    skewRef.current = new Date(serverNow).getTime() - Date.now();
-  }, [serverNow]);
+  // Skew (server − local) computed synchronously during render whenever
+  // serverNow changes. Doing it in a post-mount effect leaves a first frame
+  // where skew is still 0, which is enough to mark the window expired if the
+  // local clock is even slightly ahead of the server.
+  const skewMs = React.useMemo(() => new Date(serverNow).getTime() - Date.now(), [serverNow]);
 
   const [tickMs, setTickMs] = React.useState(() => Date.now());
   React.useEffect(() => {
@@ -49,7 +45,7 @@ export function ChallengeWindow({
   }, []);
 
   const placedMs = new Date(placedAt).getTime();
-  const serverEstimate = tickMs + skewRef.current;
+  const serverEstimate = tickMs + skewMs;
   const elapsed = serverEstimate - placedMs;
   const remainingMs = Number.isFinite(elapsed) ? Math.max(0, WINDOW_MS - elapsed) : WINDOW_MS;
   const fraction = Math.max(0, Math.min(1, remainingMs / WINDOW_MS));
