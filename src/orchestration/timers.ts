@@ -13,11 +13,11 @@ import { listPlayers } from '@persistence/players.repo';
 import { nextDeadline } from './transitions';
 import type { GameState } from '@rules/types';
 
-/** Challenge window length. Nominal spec is 3s, but realtime + refetch latency
- * eats ~1–1.5s before the opponent's screen actually renders the banner;
- * holding it open for 5s gives them the visible "3 seconds to challenge"
- * promise after lag. The on-screen indicator caps at 3s for UX clarity. */
-export const CHALLENGE_WINDOW_MS = 5_000 as const;
+/** Challenge window length on the server. The on-screen countdown shows 5s
+ * (see WINDOW_MS in ChallengeWindow.tsx); the server keeps the row in
+ * challenge-window phase a bit longer so a click that fires while the button
+ * is still visible can't lose a race with polling's preflight resolution. */
+export const CHALLENGE_WINDOW_MS = 7_000 as const;
 
 export function remainingMs(state: Pick<GameState, 'turnDeadlineAt'>, now: Date): number | null {
   if (!state.turnDeadlineAt) return null;

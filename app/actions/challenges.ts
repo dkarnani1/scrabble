@@ -11,11 +11,7 @@ import { listMoves, updateChallengeOutcome } from '@persistence/moves.repo';
 import { listPlayers, updatePlayer } from '@persistence/players.repo';
 import { getSupabaseAdminClient } from '@persistence/supabase-admin';
 import { loadGameStateForCaller } from '@orchestration/game-engine';
-import {
-  CHALLENGE_WINDOW_MS,
-  resolveChallengeWindowIfExpired,
-  resolveIfExpired,
-} from '@orchestration/timers';
+import { CHALLENGE_WINDOW_MS, resolveIfExpired } from '@orchestration/timers';
 import { nextDeadline } from '@orchestration/transitions';
 import { resolveChallenge } from '@rules/challenge';
 import { loadDictionaryById } from '@dictionary/load';
@@ -43,11 +39,13 @@ export async function raiseChallenge(
   const user = await getCurrentUser();
   if (!user) return err({ code: 'unauthenticated' });
 
-  // Preflight: lapse any expired turn or challenge-window timers before doing per-action
-  // work. Either may flip the phase out from under us.
+  // Preflight: only resolve expired turn deadlines here. Deliberately NOT
+  // resolving an expired challenge window: that would let raiseChallenge
+  // close its own window before it has a chance to lock, racing the polling
+  // preflight that's also calling the same resolver every 500ms during the
+  // challenge phase. The optimistic phase update below is the real lock.
   const now = new Date();
   await resolveIfExpired(parsed.data.gameId, now);
-  await resolveChallengeWindowIfExpired(parsed.data.gameId, now);
 
   const loaded = await loadGameStateForCaller(parsed.data.gameId, user.id);
   if (!loaded) return err({ code: 'not-found', entity: 'game' });

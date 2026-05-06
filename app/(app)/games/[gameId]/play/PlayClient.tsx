@@ -384,7 +384,7 @@ export function PlayClient({ initialView, myUserId }: PlayClientProps) {
           moveSeq: lastMove.move.seq,
         });
         if (!result.ok) {
-          setError('Challenge could not be raised.');
+          setError(formatChallengeError(result.error));
           return;
         }
         applyView(result.data);
@@ -788,4 +788,21 @@ function announceTile(prefix: string, tile: Tile, suffix?: string): string {
   const value = tile.value;
   const tail = suffix ? ` ${suffix}` : '';
   return `${prefix} ${letter}, value ${value}${tail}`;
+}
+
+function formatChallengeError(error: { code: string; reason?: string; message?: string }): string {
+  if (error.code === 'state-conflict') {
+    if (error.reason === 'challenge-window-closed')
+      return 'Too late — the challenge window already closed.';
+    if (error.reason === 'turn-already-resolved') return 'That move has already been resolved.';
+    if (error.reason === 'challenge-already-raised') return 'A challenge is already in progress.';
+    if (error.reason === 'wrong-game-phase') return 'Nothing to challenge right now.';
+    return 'Challenge rejected: ' + error.reason;
+  }
+  if (error.code === 'forbidden') {
+    if (error.reason === 'cannot-challenge-own-move') return "You can't challenge your own move.";
+    return "You can't challenge this move.";
+  }
+  if (error.code === 'unauthenticated') return 'Sign in to challenge.';
+  return error.message ?? 'Challenge could not be raised.';
 }
